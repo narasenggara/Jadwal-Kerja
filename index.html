@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal PGI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .branch-selection-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .branch-selection-screen.hidden {
+            display: none;
+        }
+
+        .branch-selection-content {
+            background: white;
+            border-radius: 20px;
+            padding: 50px 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .branch-selection-content h2 {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .branch-selection-content p {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .branch-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .branch-select-btn {
+            padding: 20px 30px;
+            border: 3px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 12px;
+            font-size: 1.3em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .branch-select-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .filter-section {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 1em;
+            min-width: 200px;
+            cursor: pointer;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .calendar-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .calendar-nav button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .calendar-nav button:hover {
+            background: #5568d3;
+        }
+
+        .month-year {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .calendar {
+            padding: 30px;
+            overflow-x: auto;
+        }
+
+        .days-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+            min-width: 700px;
+        }
+
+        .day-name {
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            min-width: 700px;
+        }
+
+        .day-cell {
+            min-height: 100px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .day-cell:hover {
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .day-cell.empty {
+            background: #f8f9fa;
+            cursor: default;
+        }
+
+        .day-cell.empty:hover {
+            box-shadow: none;
+            transform: none;
+        }
+
+        .day-number {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .day-number.red-date {
+            color: #dc3545;
+        }
+
+        .shift-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .shift-item {
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            line-height: 1.3;
+        }
+
+        .shift-item.libur {
+            background: #ffe0e0;
+            color: #c92a2a;
+            font-weight: 600;
+        }
+
+        .shift-item.pulsor {
+            background: #d3f9f6;
+            color: #087f5b;
+        }
+
+        .shift-item.siang {
+            background: #fff4cc;
+            color: #c68c00;
+        }
+
+        .shift-item.normal {
+            background: #d3f9d8;
+            color: #2f9e44;
+        }
+
+        .summary-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .summary-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .summary-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .summary-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .summary-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .summary-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .badge.libur { background: #ffe0e0; color: #c92a2a; }
+        .badge.pulsor { background: #d3f9f6; color: #087f5b; }
+        .badge.siang { background: #fff4cc; color: #c68c00; }
+
+        .legend {
+            padding: 20px 30px;
+            background: white;
+            border-top: 2px solid #e9ecef;
+        }
+
+        .legend-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .legend-items {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-color.libur { background: #ff6b6b; }
+        .legend-color.pulsor { background: #4ecdc4; }
+        .legend-color.siang { background: #ffd93d; }
+        .legend-color.normal { background: #95e1d3; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin: 20px;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-content textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 10px;
+            font-family: inherit;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-content textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-help {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #495057;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        .btn-save {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background: #5568d3;
+        }
+
+        .btn-delete {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #ff5252;
+        }
+
+        .btn-cancel {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-cancel:hover {
+            background: #dee2e6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .branch-selection-content {
+                padding: 40px 25px;
+            }
+
+            .branch-selection-content h2 {
+                font-size: 1.5em;
+            }
+
+            .branch-selection-content p {
+                font-size: 1em;
+                margin-bottom: 30px;
+            }
+
+            .branch-select-btn {
+                padding: 18px 25px;
+                font-size: 1.1em;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .header p {
+                font-size: 0.9em;
+            }
+
+            .header {
+                padding: 20px 15px;
+            }
+
+            .filter-section {
+                padding: 10px 15px;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group select {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .calendar-nav {
+                padding: 15px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .calendar-nav button {
+                width: 100%;
+                padding: 12px;
+            }
+
+            .month-year {
+                font-size: 1.2em;
+                order: -1;
+                margin-bottom: 10px;
+            }
+
+            .calendar {
+                padding: 15px;
+            }
+
+            .days-header, .days-grid {
+                min-width: 600px;
+            }
+
+            .day-name {
+                padding: 8px 4px;
+                font-size: 0.85em;
+            }
+            
+            .day-cell {
+                min-height: 80px;
+                padding: 6px;
+            }
+
+            .day-cell:hover {
+                transform: none;
+            }
+            
+            .day-number {
+                font-size: 0.95em;
+                margin-bottom: 4px;
+            }
+
+            .shift-item {
+                font-size: 0.75em;
+                padding: 4px 6px;
+            }
+
+            .summary-section {
+                padding: 20px 15px;
+            }
+
+            .summary-title {
+                font-size: 1.1em;
+            }
+
+            .summary-table {
+                font-size: 0.9em;
+            }
+
+            .summary-table th,
+            .summary-table td {
+                padding: 10px 8px;
+            }
+
+            .legend {
+                padding: 15px;
+            }
+
+            .legend-title {
+                font-size: 1em;
+                text-align: center;
+            }
+
+            .legend-items {
+                gap: 10px;
+                font-size: 0.85em;
+            }
+
+            .legend-color {
+                width: 16px;
+                height: 16px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .modal-content h2 {
+                font-size: 1.2em;
+                margin-bottom: 15px;
+            }
+
+            .modal-content textarea {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .modal-help {
+                font-size: 0.75em;
+                padding: 10px;
+            }
+
+            .modal-buttons {
+                flex-direction: column-reverse;
+            }
+
+            .modal-buttons button {
+                width: 100%;
+                padding: 12px;
+            }
+
+            .loading {
+                font-size: 1em;
+                padding: 30px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.3em;
+            }
+
+            .days-header, .days-grid {
+                min-width: 500px;
+            }
+
+            .day-cell {
+                min-height: 70px;
+                padding: 4px;
+            }
+
+            .day-number {
+                font-size: 0.85em;
+            }
+
+            .shift-item {
+                font-size: 0.7em;
+                padding: 3px 5px;
+            }
+
+            .summary-table {
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Branch Selection Screen -->
+    <div class="branch-selection-screen" id="branchSelectionScreen">
+        <div class="branch-selection-content">
+            <h2>Jadwal Kerja</h2>
+            <p>Silahkan pilih cabang mana</p>
+            <div class="branch-buttons">
+                <button class="branch-select-btn" onclick="selectBranch('bdg016')">
+                    🏢 BDG016
+                </button>
+                <button class="branch-select-btn" onclick="selectBranch('bdg026')">
+                    🏢 BDG026
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container (Hidden Initially) -->
+    <div class="container" id="mainContainer" style="display: none;">
+        <div class="header">
+            <h1>📅 Jadwal PGI - <span id="branchTitle">BDG016</span></h1>
+            <p>Klik tanggal untuk menambah atau mengedit jadwal</p>
+            <button onclick="backToBranchSelection()" style="margin-top: 15px; padding: 8px 20px; background: rgba(255,255,255,0.2); color: white; border: 2px solid white; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: all 0.3s;">
+                ← Ganti Cabang
+            </button>
+        </div>
+
+        <div class="filter-section">
+            <div class="filter-group">
+                <label for="nameFilter">🔍 Filter Nama:</label>
+                <select id="nameFilter" onchange="filterByName()">
+                    <option value="">Semua Orang</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="calendar-nav">
+            <button onclick="changeMonth(-1)">← Bulan Sebelumnya</button>
+            <div class="month-year" id="monthYear"></div>
+            <button onclick="changeMonth(1)">Bulan Berikutnya →</button>
+        </div>
+
+        <div class="calendar">
+            <div id="loading" class="loading">Memuat data...</div>
+            <div id="calendarContent" style="display: none;">
+                <div class="days-header">
+                    <div class="day-name">Sen</div>
+                    <div class="day-name">Sel</div>
+                    <div class="day-name">Rab</div>
+                    <div class="day-name">Kam</div>
+                    <div class="day-name">Jum</div>
+                    <div class="day-name">Sab</div>
+                    <div class="day-name">Min</div>
+                </div>
+                <div class="days-grid" id="daysGrid"></div>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <div class="summary-title">📊 Rekap Shift (Bulan Ini)</div>
+            <div style="overflow-x: auto;">
+                <table class="summary-table" id="summaryTable">
+                    <thead>
+                        <tr>
+                            <th>Nama</th>
+                            <th>Libur (L)</th>
+                            <th>Pulsor (P)</th>
+                            <th>Siang (S)</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #6c757d;">Memuat data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-title">Keterangan Shift:</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color libur"></div>
+                    <span><strong>(L)</strong> Libur</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color pulsor"></div>
+                    <span><strong>(P)</strong> Pulsor</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color siang"></div>
+                    <span><strong>(S)</strong> Siang</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color normal"></div>
+                    <span>Normal</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Edit Jadwal Shift</h2>
+            <div class="modal-help">
+                Format: <strong>Nama (Kode)</strong><br>
+                Contoh:<br>
+                • Andi (L) - Libur<br>
+                • Budi (P) - Pulsor<br>
+                • Citra (S) - Siang<br>
+                • Deni - Normal (tanpa kode)<br>
+                <em>Pisahkan dengan enter untuk multiple orang</em>
+            </div>
+            <textarea id="shiftInput" placeholder="Contoh:&#10;Andi (L)&#10;Budi (P)&#10;Citra (S)"></textarea>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal()">Batal</button>
+                <button class="btn-delete" onclick="deleteShift()">🗑 Hapus Jadwal</button>
+                <button class="btn-save" onclick="saveShift()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const today = new Date();
+        let currentMonth = today.getMonth();
+        let currentYear = today.getFullYear();
+        let shiftData = {};
+        let selectedDate = null;
+        let selectedFilter = '';
+        let currentBranch = 'bdg016';
+
+        // URL untuk masing-masing cabang
+        const SCRIPT_URLS = {
+            'bdg016': 'https://script.google.com/macros/s/AKfycbzGXFycufPgLbXSNzxdxQBmE9VAXYxeGrKr6H81fIOOgUflIc2f9nOhQ6HohfPZYqw0Vw/exec',
+            'bdg026': 'https://script.google.com/macros/s/YOUR_BDG026_SCRIPT_URL/exec' // Ganti dengan URL script BDG026
+        };
+
+        const monthNames = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+
+        // Daftar libur nasional 2025-2026 (format: 'YYYY-MM-DD')
+        const nationalHolidays = {
+            // 2025
+            '2025-01-01': 'Tahun Baru 2025',
+            '2025-01-16': 'Isra Mikraj Nabi Muhammad SAW',
+            '2025-01-29': 'Tahun Baru Imlek 2576',
+            '2025-03-29': 'Hari Suci Nyepi (Tahun Baru Saka 1947)',
+            '2025-03-31': 'Wafat Isa Al Masih',
+            '2025-04-01': 'Cuti Bersama Wafat Isa Al Masih',
+            '2025-04-02': 'Cuti Bersama Idul Fitri',
+            '2025-04-03': 'Idul Fitri 1446 H',
+            '2025-04-04': 'Idul Fitri 1446 H',
+            '2025-04-07': 'Cuti Bersama Idul Fitri',
+            '2025-05-01': 'Hari Buruh Internasional',
+            '2025-05-12': 'Kenaikan Isa Al Masih',
+            '2025-05-29': 'Hari Raya Waisak 2569',
+            '2025-06-01': 'Hari Lahir Pancasila',
+            '2025-06-06': 'Idul Adha 1446 H',
+            '2025-06-27': 'Tahun Baru Islam 1447 H',
+            '2025-08-17': 'Hari Kemerdekaan RI',
+            '2025-09-05': 'Maulid Nabi Muhammad SAW',
+            '2025-12-25': 'Hari Raya Natal',
+            '2025-12-26': 'Cuti Bersama Hari Raya Natal',
+            
+            // 2026
+            '2026-01-01': 'Tahun Baru 2026',
+            '2026-01-06': 'Isra Mikraj Nabi Muhammad SAW',
+            '2026-02-17': 'Tahun Baru Imlek 2577',
+            '2026-03-19': 'Hari Suci Nyepi (Tahun Baru Saka 1948)',
+            '2026-03-24': 'Idul Fitri 1447 H',
+            '2026-03-25': 'Idul Fitri 1447 H',
+            '2026-04-03': 'Wafat Isa Al Masih',
+            '2026-05-01': 'Hari Buruh Internasional',
+            '2026-05-14': 'Kenaikan Isa Al Masih',
+            '2026-05-18': 'Hari Raya Waisak 2570',
+            '2026-05-27': 'Idul Adha 1447 H',
+            '2026-06-01': 'Hari Lahir Pancasila',
+            '2026-06-17': 'Tahun Baru Islam 1448 H',
+            '2026-08-17': 'Hari Kemerdekaan RI',
+            '2026-08-26': 'Maulid Nabi Muhammad SAW',
+            '2026-12-25': 'Hari Raya Natal'
+        };
+
+        function isRedDate(year, month, day) {
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const date = new Date(year, month, day);
+            const dayOfWeek = date.getDay();
+            
+            // Minggu atau libur nasional
+            return dayOfWeek === 0 || nationalHolidays[dateKey];
+        }
+
+        function getHolidayName(year, month, day) {
+            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            return nationalHolidays[dateKey] || null;
+        }
+
+        function selectBranch(branch) {
+            currentBranch = branch;
+            
+            // Update branch title
+            document.getElementById('branchTitle').textContent = branch.toUpperCase();
+            
+            // Hide selection screen and show main container
+            document.getElementById('branchSelectionScreen').classList.add('hidden');
+            document.getElementById('mainContainer').style.display = 'block';
+            
+            // Reset filter
+            selectedFilter = '';
+            document.getElementById('nameFilter').value = '';
+            
+            // Load data for selected branch
+            loadData();
+        }
+
+        function backToBranchSelection() {
+            // Show selection screen and hide main container
+            document.getElementById('branchSelectionScreen').classList.remove('hidden');
+            document.getElementById('mainContainer').style.display = 'none';
+            
+            // Reset data
+            shiftData = {};
+        }
+
+        function switchBranch(branch) {
+            currentBranch = branch;
+            
+            // Update button states
+            document.querySelectorAll('.branch-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Reset filter
+            selectedFilter = '';
+            document.getElementById('nameFilter').value = '';
+            
+            // Reload data for selected branch
+            loadData();
+        }
+
+        async function loadData() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('calendarContent').style.display = 'none';
+                
+                const response = await fetch(SCRIPT_URLS[currentBranch]);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                shiftData = {};
+                data.forEach(row => {
+                    if (row.date) {
+                        let dateKey = row.date;
+                        if (dateKey.includes('T')) {
+                            const d = new Date(dateKey);
+                            dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        }
+                        shiftData[dateKey] = row.names || '';
+                    }
+                });
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('calendarContent').style.display = 'block';
+                updateNameFilter();
+                renderCalendar();
+                updateSummary();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').innerHTML = 'Gagal memuat data. <button onclick="loadData()" style="margin-left:10px;padding:8px 16px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;">Coba Lagi</button>';
+            }
+        }
+
+        function updateNameFilter() {
+            const names = new Set();
+            Object.values(shiftData).forEach(shifts => {
+                if (shifts) {
+                    shifts.split('\n').forEach(shift => {
+                        const name = shift.replace(/\s*\([LPS]\)\s*/g, '').trim();
+                        if (name) names.add(name);
+                    });
+                }
+            });
+
+            const select = document.getElementById('nameFilter');
+            select.innerHTML = '<option value="">Semua Orang</option>';
+            Array.from(names).sort().forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+
+        function filterByName() {
+            selectedFilter = document.getElementById('nameFilter').value;
+            renderCalendar();
+            updateSummary();
+        }
+
+        function getShiftType(text) {
+            if (text.includes('(L)')) return 'libur';
+            if (text.includes('(P)')) return 'pulsor';
+            if (text.includes('(S)')) return 'siang';
+            return 'normal';
+        }
+
+        function renderCalendar() {
+            const monthYear = document.getElementById('monthYear');
+            monthYear.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+            const daysGrid = document.getElementById('daysGrid');
+            daysGrid.innerHTML = '';
+
+            const jsDay = new Date(currentYear, currentMonth, 1).getDay();
+            const firstDay = (jsDay === 0) ? 6 : jsDay - 1;
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                daysGrid.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+                
+                const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                // Check if red date
+                const isRed = isRedDate(currentYear, currentMonth, day);
+                const holidayName = getHolidayName(currentYear, currentMonth, day);
+                
+                const shiftListDiv = document.createElement('div');
+                shiftListDiv.className = 'shift-list';
+                
+                if (shiftData[dateKey]) {
+                    const shifts = shiftData[dateKey].split('\n').filter(s => s.trim());
+                    shifts.forEach(shift => {
+                        const name = shift.replace(/\s*\([LPS]\)\s*/g, '').trim();
+                        
+                        if (!selectedFilter || name === selectedFilter) {
+                            const shiftItem = document.createElement('div');
+                            shiftItem.className = `shift-item ${getShiftType(shift)}`;
+                            shiftItem.textContent = shift.trim();
+                            shiftListDiv.appendChild(shiftItem);
+                        }
+                    });
+                }
+                
+                dayCell.innerHTML = `<div class="day-number ${isRed ? 'red-date' : ''}">${day}</div>`;
+                dayCell.appendChild(shiftListDiv);
+                
+                // Tooltip untuk libur nasional
+                if (holidayName) {
+                    dayCell.title = holidayName;
+                }
+                
+                dayCell.onclick = () => openModal(day);
+                daysGrid.appendChild(dayCell);
+            }
+        }
+
+        function updateSummary() {
+            const summary = {};
+            const startDate = new Date(currentYear, currentMonth, 1);
+            const endDate = new Date(currentYear, currentMonth + 1, 0);
+
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+                const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                
+                if (shiftData[dateKey]) {
+                    shiftData[dateKey].split('\n').forEach(shift => {
+                        const name = shift.replace(/\s*\([LPS]\)\s*/g, '').trim();
+                        if (!name) return;
+                        
+                        if (selectedFilter && name !== selectedFilter) return;
+
+                        if (!summary[name]) {
+                            summary[name] = { libur: 0, pulsor: 0, siang: 0, total: 0 };
+                        }
+
+                        if (shift.includes('(L)')) summary[name].libur++;
+                        else if (shift.includes('(P)')) summary[name].pulsor++;
+                        else if (shift.includes('(S)')) summary[name].siang++;
+                        
+                        summary[name].total++;
+                    });
+                }
+            }
+
+            const tbody = document.getElementById('summaryBody');
+            tbody.innerHTML = '';
+
+            const sortedNames = Object.keys(summary).sort();
+            
+            if (sortedNames.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #6c757d;">Tidak ada data</td></tr>';
+                return;
+            }
+
+            sortedNames.forEach(name => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${name}</strong></td>
+                    <td><span class="badge libur">${summary[name].libur}</span></td>
+                    <td><span class="badge pulsor">${summary[name].pulsor}</span></td>
+                    <td><span class="badge siang">${summary[name].siang}</span></td>
+                    <td><strong>${summary[name].total}</strong></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function openModal(day) {
+            selectedDate = day;
+            const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+            document.getElementById('modalTitle').textContent = `Jadwal Shift ${currentBranch.toUpperCase()} - ${day} ${monthNames[currentMonth]} ${currentYear}`;
+            document.getElementById('shiftInput').value = shiftData[dateKey] || '';
+            document.getElementById('modal').classList.add('active');
+            document.getElementById('shiftInput').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            selectedDate = null;
+        }
+
+        async function saveShift() {
+            const shifts = document.getElementById('shiftInput').value.trim();
+            const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+            
+            try {
+                await fetch(SCRIPT_URLS[currentBranch], {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({
+                        date: dateKey,
+                        names: shifts
+                    })
+                });
+                
+                if (shifts) {
+                    shiftData[dateKey] = shifts;
+                } else {
+                    delete shiftData[dateKey];
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                updateNameFilter();
+                renderCalendar();
+                updateSummary();
+                closeModal();
+            } catch (error) {
+                console.error('Error saving data:', error);
+                alert('Gagal menyimpan data. Silakan coba lagi.');
+            }
+        }
+
+        async function deleteShift() {
+            if (!confirm('Yakin ingin menghapus semua jadwal di tanggal ini?')) {
+                return;
+            }
+
+            const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+            
+            try {
+                await fetch(SCRIPT_URLS[currentBranch], {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({
+                        date: dateKey,
+                        names: ''
+                    })
+                });
+                
+                delete shiftData[dateKey];
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                updateNameFilter();
+                renderCalendar();
+                updateSummary();
+                closeModal();
+            } catch (error) {
+                console.error('Error deleting data:', error);
+                alert('Gagal menghapus data. Silakan coba lagi.');
+            }
+        }
+
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+            updateSummary();
+        }
+
+        // Don't auto-load, wait for user to select branch
+    </script>
+</body>
+</html>
