@@ -277,6 +277,8 @@
         }
         .task-item.oneoff { background: var(--purple-light); color: #5b21b6; }
         .task-item.recurring { background: var(--accent-light); color: #c2410c; }
+        .task-item.permanent-recurring { background: #e0f2fe; color: #0369a1; border-left: 2px solid #0ea5e9; }
+        .task-item.recurring { background: var(--accent-light); color: #c2410c; }
         .task-item .task-icon { font-size: 0.9em; flex-shrink: 0; }
 
         /* ── HOLIDAY SECTION ── */
@@ -584,6 +586,7 @@
         <div id="taskLegend" style="display:none;gap:12px;flex-wrap:wrap;align-items:center;">
             <div class="legend-item"><div class="legend-dot ld-oneoff"></div> Tugas Sekali</div>
             <div class="legend-item"><div class="legend-dot ld-recurring"></div> Tugas Berulang</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#0ea5e9"></div> 🔧 Tugas Tetap</div>
         </div>
     </div>
 </div>
@@ -693,10 +696,36 @@ let selectedFilter = '';
 
 const SCRIPT_URLS = {
     bdg016: 'https://script.google.com/macros/s/AKfycbzGXFycufPgLbXSNzxdxQBmE9VAXYxeGrKr6H81fIOOgUflIc2f9nOhQ6HohfPZYqw0Vw/exec',
-    bdg026: 'https://script.google.com/macros/s/YOUR_BDG026_SCRIPT_URL/exec'
+    bdg026: 'https://script.google.com/macros/s/AKfycbwZwB9wS0XkopObAh0uTzSK41ZIi4vRQRBCl_HlvQiP12ln96vxcKFd_qC_lGcXwzzE/exec'
 };
 
 const TASK_STORAGE_PREFIX = 'pgi_tasks_';
+
+// ─────────────────────────────────────────
+//  PERMANENT TASKS (hardcoded, always shown)
+//  monthly-odd = hanya bulan ganjil (Jan,Mar,Mei,Jul,Sep,Nov)
+//  m is 0-indexed: bulan ganjil = m % 2 === 0
+// ─────────────────────────────────────────
+const PERMANENT_TASKS = [
+    { name: 'Perawatan PC',       type: 'weekly',      days:  [6]      },
+    { name: 'Perawatan PC',       type: 'monthly-odd', dates: [15]     },
+    { name: 'Penggantian Air Uji',type: 'monthly',     dates: [1, 16]  },
+];
+
+function getPermanentTasksForDate(y, m, d) {
+    const dow = new Date(y, m, d).getDay();
+    const results = [];
+    PERMANENT_TASKS.forEach(t => {
+        if (t.type === 'weekly' && t.days.includes(dow)) {
+            results.push({ name: t.name, kind: 'permanent-recurring' });
+        } else if (t.type === 'monthly' && t.dates.includes(d)) {
+            results.push({ name: t.name, kind: 'permanent-recurring' });
+        } else if (t.type === 'monthly-odd' && t.dates.includes(d) && (m % 2 === 0)) {
+            results.push({ name: t.name, kind: 'permanent-recurring' });
+        }
+    });
+    return results;
+}
 
 const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const dayNames   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
@@ -729,8 +758,8 @@ const nationalHolidays = {
     '2026-01-06':'Isra Mikraj Nabi Muhammad SAW',
     '2026-02-17':'Tahun Baru Imlek 2577',
     '2026-03-19':'Hari Suci Nyepi (Tahun Baru Saka 1948)',
-    '2026-03-24':'Idul Fitri 1447 H',
-    '2026-03-25':'Idul Fitri 1447 H',
+    '2026-03-20':'Idul Fitri 1447 H',
+    '2026-03-21':'Idul Fitri 1447 H',
     '2026-04-03':'Wafat Isa Al Masih',
     '2026-05-01':'Hari Buruh Internasional',
     '2026-05-14':'Kenaikan Isa Al Masih',
@@ -867,20 +896,23 @@ function saveTasks() {
 // Get tasks visible on a specific date
 function getTasksForDate(y, m, d) {
     const dk = dateKey(y, m+1, d);
-    const dow = new Date(y, m, d).getDay(); // 0=Sun...6=Sat
+    const dow = new Date(y, m, d).getDay();
     const results = [];
+
+    // Permanent tasks first
+    getPermanentTasksForDate(y, m, d).forEach(t => results.push(t));
 
     // One-off
     (taskData.oneoff[dk] || []).forEach(t => {
         results.push({ ...t, kind: 'oneoff', dk });
     });
 
-    // Weekly
+    // Weekly (user-created)
     taskData.weekly.forEach(t => {
         if (t.days.includes(dow)) results.push({ ...t, kind: 'recurring' });
     });
 
-    // Monthly
+    // Monthly (user-created)
     taskData.monthly.forEach(t => {
         if (t.dates.includes(d)) results.push({ ...t, kind: 'recurring' });
     });
@@ -951,7 +983,7 @@ function renderCalendar() {
             tasks.forEach(t => {
                 const item = document.createElement('div');
                 item.className = `task-item ${t.kind}`;
-                item.innerHTML = `<span class="task-icon">${t.kind === 'recurring' ? '🔁' : '📌'}</span>${t.name}`;
+                item.innerHTML = `<span class="task-icon">${t.kind === 'permanent-recurring' ? '🔧' : t.kind === 'recurring' ? '🔁' : '📌'}</span>${t.name}`;
                 list.appendChild(item);
             });
             cell.appendChild(list);
@@ -1080,6 +1112,20 @@ function renderExistingTasks(day) {
     wrap.innerHTML = '';
     const dk = dateKey(currentYear, currentMonth+1, day);
     const dow = new Date(currentYear, currentMonth, day).getDay();
+
+    // Permanent tasks (read-only)
+    getPermanentTasksForDate(currentYear, currentMonth, day).forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'task-existing-item';
+        div.style.background = '#e0f2fe';
+        div.innerHTML = `<span>🔧 ${t.name}<span class="task-badge" style="background:#bae6fd;color:#0369a1;">Tugas Tetap</span></span>`;
+        const lk = document.createElement('span');
+        lk.textContent = '🔒';
+        lk.title = 'Tugas tetap tidak dapat dihapus';
+        lk.style.cssText = 'padding:2px 6px;color:#0369a1;font-size:0.9em;';
+        div.appendChild(lk);
+        wrap.appendChild(div);
+    });
 
     // One-off on this date
     (taskData.oneoff[dk] || []).forEach((t, idx) => {
