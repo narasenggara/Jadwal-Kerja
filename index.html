@@ -275,8 +275,12 @@
             font-weight: 500; line-height: 1.3;
             display: flex; align-items: flex-start; gap: 4px;
         }
-        .task-item.oneoff { background: var(--purple-light); color: #5b21b6; }
-        .task-item.recurring { background: var(--accent-light); color: #c2410c; }
+        .task-item.tugas           { background: var(--primary-light); color: var(--primary-dark); }
+        .task-item.kunjungan_kc    { background: #fef3c7; color: #92400e; }
+        .task-item.kunjungan_audit { background: #ede9fe; color: #5b21b6; }
+        .task-item.lainnya         { background: #f0fdf4; color: #166534; }
+        .task-item.oneoff          { background: var(--primary-light); color: var(--primary-dark); }
+        .task-item.recurring       { background: var(--accent-light); color: #c2410c; }
         .task-item.permanent-recurring { background: #e0f2fe; color: #0369a1; border-left: 2px solid #0ea5e9; }
         .task-item.recurring { background: var(--accent-light); color: #c2410c; }
         .task-item .task-icon { font-size: 0.9em; flex-shrink: 0; }
@@ -610,9 +614,9 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="closeShiftModal()">Batal</button>
-            <button class="btn btn-danger" onclick="deleteShift()">🗑 Hapus</button>
-            <button class="btn btn-primary" onclick="saveShift()">Simpan</button>
+            <button id="btnCancelShift" class="btn btn-secondary" onclick="closeShiftModal()">Batal</button>
+            <button id="btnDeleteShift" class="btn btn-danger" onclick="deleteShift()">🗑 Hapus</button>
+            <button id="btnSaveShift" class="btn btn-primary" onclick="saveShift()">Simpan</button>
         </div>
     </div>
 </div>
@@ -634,48 +638,36 @@
 
             <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
 
-            <!-- Add new task -->
+            <!-- Add new item -->
             <div class="form-group">
-                <label class="form-label">Tambah Tugas Baru</label>
-                <input class="form-input" id="taskName" placeholder="Nama tugas..." style="margin-bottom:10px;">
-
-                <label class="form-label">Jenis Pengulangan</label>
-                <select class="form-select" id="taskType" onchange="toggleRecurOptions()">
-                    <option value="oneoff">Sekali (tanggal ini saja)</option>
-                    <option value="weekly">Mingguan (hari tertentu)</option>
-                    <option value="monthly">Bulanan (tanggal tertentu)</option>
+                <label class="form-label">Tambah Catatan</label>
+                <select class="form-select" id="taskType" onchange="toggleAddOptions()">
+                    <option value="tugas">Tugas Harian</option>
+                    <option value="kunjungan_kc">Kunjungan KC</option>
+                    <option value="kunjungan_audit">Kunjungan AUDIT</option>
+                    <option value="holiday">Libur Tambahan</option>
+                    <option value="lainnya">Lainnya</option>
                 </select>
 
-                <div class="recur-options" id="weeklyOptions">
-                    <div class="recur-row">
-                        <label>Hari:</label>
-                        <div class="checkboxes">
-                            <label class="day-check"><input type="checkbox" value="1"> Sen</label>
-                            <label class="day-check"><input type="checkbox" value="2"> Sel</label>
-                            <label class="day-check"><input type="checkbox" value="3"> Rab</label>
-                            <label class="day-check"><input type="checkbox" value="4"> Kam</label>
-                            <label class="day-check"><input type="checkbox" value="5"> Jum</label>
-                            <label class="day-check"><input type="checkbox" value="6"> Sab</label>
-                            <label class="day-check"><input type="checkbox" value="0"> Min</label>
-                        </div>
-                    </div>
+                <!-- Input nama (untuk semua kecuali libur) -->
+                <div id="taskNameWrap" style="margin-top:10px;">
+                    <label class="form-label" id="taskNameLabel">Nama Tugas</label>
+                    <input class="form-input" id="taskName" placeholder="Nama tugas...">
                 </div>
 
-                <div class="recur-options" id="monthlyOptions">
-                    <div class="recur-row">
-                        <label>Tanggal:</label>
-                        <div class="date-inputs" id="monthlyDates">
-                            <input class="date-num-input" type="number" min="1" max="31" placeholder="tgl" id="mDate1">
-                            <input class="date-num-input" type="number" min="1" max="31" placeholder="tgl" id="mDate2">
-                            <input class="date-num-input" type="number" min="1" max="31" placeholder="tgl" id="mDate3">
-                        </div>
+                <!-- Libur Tambahan -->
+                <div id="holidayNameWrap" style="display:none;margin-top:10px;">
+                    <label class="form-label">Keterangan Libur</label>
+                    <input class="form-input" id="holidayName" placeholder="Contoh: Cuti Bersama, Libur Kantor...">
+                    <div style="margin-top:8px;font-size:0.8em;color:var(--danger);background:var(--danger-light);padding:8px 10px;border-radius:6px;">
+                        Tanggal ini akan ditandai merah sebagai hari libur tambahan.
                     </div>
                 </div>
             </div>
         </div>
         <div class="modal-footer">
             <button class="btn btn-secondary" onclick="closeTaskModal()">Tutup</button>
-            <button class="btn btn-primary task" onclick="addTask()">+ Tambah Tugas</button>
+            <button class="btn btn-primary task" id="btnAddTask" onclick="addTask()">+ Tambah</button>
         </div>
     </div>
 </div>
@@ -684,116 +676,173 @@
 // ─────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────
-const today = new Date();
-let currentMonth = today.getMonth();
-let currentYear  = today.getFullYear();
-let shiftData    = {};
-let taskData     = { oneoff: {}, weekly: [], monthly: [] };
-let currentBranch = 'bdg016';
-let calendarMode  = 'shift';
-let selectedDay   = null;
+const today        = new Date();
+let currentMonth   = today.getMonth();
+let currentYear    = today.getFullYear();
+let shiftData        = {};
+let taskData         = { oneoff: {}, weekly: [], monthly: [] };
+let customHolidays   = {};   // { 'YYYY-MM-DD': 'label' } — user-added red dates
+let currentBranch  = 'bdg016';
+let calendarMode   = 'shift';
+let selectedDay    = null;
 let selectedFilter = '';
+let isSaving       = false;  // lock to prevent duplicate requests
 
+// ─────────────────────────────────────────
+//  CONFIG — Script URLs per cabang
+// ─────────────────────────────────────────
 const SCRIPT_URLS = {
     bdg016: 'https://script.google.com/macros/s/AKfycbzGXFycufPgLbXSNzxdxQBmE9VAXYxeGrKr6H81fIOOgUflIc2f9nOhQ6HohfPZYqw0Vw/exec',
     bdg026: 'https://script.google.com/macros/s/AKfycbwZwB9wS0XkopObAh0uTzSK41ZIi4vRQRBCl_HlvQiP12ln96vxcKFd_qC_lGcXwzzE/exec'
 };
 
-const TASK_STORAGE_PREFIX = 'pgi_tasks_';
+// Task data is stored in Google Sheets (tab: Tasks), not localStorage.
 
 // ─────────────────────────────────────────
-//  PERMANENT TASKS (hardcoded, always shown)
-//  monthly-odd = hanya bulan ganjil (Jan,Mar,Mei,Jul,Sep,Nov)
-//  m is 0-indexed: bulan ganjil = m % 2 === 0
+//  CONFIG — National Holidays
+//  (kept as a plain data object, separate from logic)
+// ─────────────────────────────────────────
+const nationalHolidays = {
+    '2025-01-01': 'Tahun Baru 2025',
+    '2025-01-16': 'Isra Mikraj Nabi Muhammad SAW',
+    '2025-01-29': 'Tahun Baru Imlek 2576',
+    '2025-03-29': 'Hari Suci Nyepi (Tahun Baru Saka 1947)',
+    '2025-03-31': 'Wafat Isa Al Masih',
+    '2025-04-01': 'Cuti Bersama Wafat Isa Al Masih',
+    '2025-04-02': 'Cuti Bersama Idul Fitri',
+    '2025-04-03': 'Idul Fitri 1446 H',
+    '2025-04-04': 'Idul Fitri 1446 H',
+    '2025-04-07': 'Cuti Bersama Idul Fitri',
+    '2025-05-01': 'Hari Buruh Internasional',
+    '2025-05-12': 'Kenaikan Isa Al Masih',
+    '2025-05-29': 'Hari Raya Waisak 2569',
+    '2025-06-01': 'Hari Lahir Pancasila',
+    '2025-06-06': 'Idul Adha 1446 H',
+    '2025-06-27': 'Tahun Baru Islam 1447 H',
+    '2025-08-17': 'Hari Kemerdekaan RI',
+    '2025-09-05': 'Maulid Nabi Muhammad SAW',
+    '2025-12-25': 'Hari Raya Natal',
+    '2025-12-26': 'Cuti Bersama Hari Raya Natal',
+    '2026-01-01': 'Tahun Baru 2026',
+    '2026-01-06': 'Isra Mikraj Nabi Muhammad SAW',
+    '2026-02-17': 'Tahun Baru Imlek 2577',
+    '2026-03-19': 'Hari Suci Nyepi (Tahun Baru Saka 1948)',
+    '2026-03-20': 'Idul Fitri 1447 H',
+    '2026-03-21': 'Idul Fitri 1447 H',
+    '2026-04-03': 'Wafat Isa Al Masih',
+    '2026-05-01': 'Hari Buruh Internasional',
+    '2026-05-14': 'Kenaikan Isa Al Masih',
+    '2026-05-18': 'Hari Raya Waisak 2570',
+    '2026-05-27': 'Idul Adha 1447 H',
+    '2026-06-01': 'Hari Lahir Pancasila',
+    '2026-06-17': 'Tahun Baru Islam 1448 H',
+    '2026-08-17': 'Hari Kemerdekaan RI',
+    '2026-08-26': 'Maulid Nabi Muhammad SAW',
+    '2026-12-25': 'Hari Raya Natal'
+};
+
+// ─────────────────────────────────────────
+//  CONFIG — Permanent Tasks
+//  monthly-odd = tanggal tertentu, hanya bulan ganjil (Jan=m0, Mar=m2 … m%2===0)
 // ─────────────────────────────────────────
 const PERMANENT_TASKS = [
-    { name: 'Perawatan PC',       type: 'weekly',      days:  [6]      },
-    { name: 'Perawatan PC',       type: 'monthly-odd', dates: [15]     },
-    { name: 'Penggantian Air Uji',type: 'monthly',     dates: [1, 16]  },
+    { name: 'Perawatan PC',        type: 'weekly',      days:  [6]     },
+    { name: 'Perawatan PC',        type: 'monthly-odd', dates: [15]    },
+    { name: 'Penggantian Air Uji', type: 'monthly',     dates: [1, 16] },
 ];
 
-function getPermanentTasksForDate(y, m, d) {
-    const dow = new Date(y, m, d).getDay();
-    const results = [];
-    PERMANENT_TASKS.forEach(t => {
-        if (t.type === 'weekly' && t.days.includes(dow)) {
-            results.push({ name: t.name, kind: 'permanent-recurring' });
-        } else if (t.type === 'monthly' && t.dates.includes(d)) {
-            results.push({ name: t.name, kind: 'permanent-recurring' });
-        } else if (t.type === 'monthly-odd' && t.dates.includes(d) && (m % 2 === 0)) {
-            results.push({ name: t.name, kind: 'permanent-recurring' });
-        }
-    });
-    return results;
-}
-
+// ─────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────
 const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const dayNames   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
-// ─────────────────────────────────────────
-//  NATIONAL HOLIDAYS
-// ─────────────────────────────────────────
-const nationalHolidays = {
-    '2025-01-01':'Tahun Baru 2025',
-    '2025-01-16':'Isra Mikraj Nabi Muhammad SAW',
-    '2025-01-29':'Tahun Baru Imlek 2576',
-    '2025-03-29':'Hari Suci Nyepi (Tahun Baru Saka 1947)',
-    '2025-03-31':'Wafat Isa Al Masih',
-    '2025-04-01':'Cuti Bersama Wafat Isa Al Masih',
-    '2025-04-02':'Cuti Bersama Idul Fitri',
-    '2025-04-03':'Idul Fitri 1446 H',
-    '2025-04-04':'Idul Fitri 1446 H',
-    '2025-04-07':'Cuti Bersama Idul Fitri',
-    '2025-05-01':'Hari Buruh Internasional',
-    '2025-05-12':'Kenaikan Isa Al Masih',
-    '2025-05-29':'Hari Raya Waisak 2569',
-    '2025-06-01':'Hari Lahir Pancasila',
-    '2025-06-06':'Idul Adha 1446 H',
-    '2025-06-27':'Tahun Baru Islam 1447 H',
-    '2025-08-17':'Hari Kemerdekaan RI',
-    '2025-09-05':'Maulid Nabi Muhammad SAW',
-    '2025-12-25':'Hari Raya Natal',
-    '2025-12-26':'Cuti Bersama Hari Raya Natal',
-    '2026-01-01':'Tahun Baru 2026',
-    '2026-01-06':'Isra Mikraj Nabi Muhammad SAW',
-    '2026-02-17':'Tahun Baru Imlek 2577',
-    '2026-03-19':'Hari Suci Nyepi (Tahun Baru Saka 1948)',
-    '2026-03-20':'Idul Fitri 1447 H',
-    '2026-03-21':'Idul Fitri 1447 H',
-    '2026-04-03':'Wafat Isa Al Masih',
-    '2026-05-01':'Hari Buruh Internasional',
-    '2026-05-14':'Kenaikan Isa Al Masih',
-    '2026-05-18':'Hari Raya Waisak 2570',
-    '2026-05-27':'Idul Adha 1447 H',
-    '2026-06-01':'Hari Lahir Pancasila',
-    '2026-06-17':'Tahun Baru Islam 1448 H',
-    '2026-08-17':'Hari Kemerdekaan RI',
-    '2026-08-26':'Maulid Nabi Muhammad SAW',
-    '2026-12-25':'Hari Raya Natal'
-};
-
-function isRedDate(y, m, d) {
-    const dk = dateKey(y, m+1, d);
-    return new Date(y, m, d).getDay() === 0 || !!nationalHolidays[dk];
-}
-function getHolidayName(y, m, d) {
-    return nationalHolidays[dateKey(y, m+1, d)] || null;
-}
 function dateKey(y, m, d) {
     return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
+function isRedDate(y, m, d) {
+    const dk = dateKey(y, m+1, d);
+    return new Date(y, m, d).getDay() === 0 || !!nationalHolidays[dk] || !!customHolidays[dk];
+}
+function getHolidayName(y, m, d) {
+    const dk = dateKey(y, m+1, d);
+    return nationalHolidays[dk] || customHolidays[dk] || null;
+}
 
 // ─────────────────────────────────────────
-//  BRANCH / MODE SELECTION
+//  TOAST NOTIFICATIONS
 // ─────────────────────────────────────────
-function selectBranch(branch) {
-    currentBranch = branch;
+function showToast(msg, type = 'success') {
+    const existing = document.getElementById('toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'toast';
+    const colors = {
+        success: 'background:#10b981;',
+        error:   'background:#ef4444;',
+        info:    'background:#3d5af1;',
+        warning: 'background:#f59e0b;'
+    };
+    toast.style.cssText = `
+        position:fixed; bottom:28px; left:50%; transform:translateX(-50%);
+        ${colors[type] || colors.success}
+        color:white; padding:12px 24px; border-radius:10px;
+        font-family:'Plus Jakarta Sans',sans-serif; font-weight:600; font-size:0.9em;
+        box-shadow:0 8px 24px rgba(0,0,0,0.2); z-index:9999;
+        animation:toastIn 0.3s ease; white-space:nowrap;
+    `;
+    toast.textContent = msg;
+
+    if (!document.getElementById('toast-style')) {
+        const style = document.createElement('style');
+        style.id = 'toast-style';
+        style.textContent = `
+            @keyframes toastIn  { from { opacity:0; transform:translateX(-50%) translateY(12px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+            @keyframes toastOut { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(12px); } }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'toastOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
+}
+
+// ─────────────────────────────────────────
+//  INPUT VALIDATION & NORMALISATION
+// ─────────────────────────────────────────
+// Auto-fix common typos: "Andi(L)" → "Andi (L)", "andi (l)" → "Andi (L)"
+function normaliseShiftInput(raw) {
+    return raw
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+            // Insert space before (L/P/S) if missing: "Andi(L)" → "Andi (L)"
+            line = line.replace(/([^\s])\(([LPSlps])\)/g, '$1 ($2)');
+            // Uppercase the shift code
+            line = line.replace(/\(([lps])\)/gi, (_, c) => `(${c.toUpperCase()})`);
+            return line;
+        })
+        .join('\n');
+}
+
+// ─────────────────────────────────────────
+//  BRANCH / MODE
+// ─────────────────────────────────────────
+async function selectBranch(branch) {
+    currentBranch  = branch;
+    selectedFilter = '';
     document.getElementById('branchTitle').textContent = branch.toUpperCase();
     document.getElementById('branchScreen').classList.add('hidden');
     document.getElementById('mainContainer').style.display = 'block';
-    selectedFilter = '';
-    loadData();
-    loadTasks();
+    // Load shift data and task data in parallel for speed
+    await Promise.all([ loadData(), loadTasks() ]);
+    // Re-render after both are done to ensure task dots appear correctly
+    renderCalendar();
 }
 
 function backToBranch() {
@@ -814,15 +863,18 @@ function setMode(mode) {
 }
 
 // ─────────────────────────────────────────
-//  SHIFT DATA (Google Sheets)
+//  SHIFT DATA — Load from Google Sheets
+//  All shift data for ALL months is loaded at once (single fetch).
+//  changeMonth() only re-renders; no extra fetch needed.
 // ─────────────────────────────────────────
 async function loadData() {
     try {
-        document.getElementById('loading').style.display = 'block';
-        document.getElementById('calendarContent').style.display = 'none';
+        setLoadingState(true);
         const res  = await fetch(SCRIPT_URLS[currentBranch]);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        shiftData  = {};
+
+        shiftData = {};
         data.forEach(row => {
             if (!row.date) return;
             let dk = row.date;
@@ -832,15 +884,21 @@ async function loadData() {
             }
             shiftData[dk] = row.names || '';
         });
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('calendarContent').style.display = 'block';
+
+        setLoadingState(false);
         updateNameFilter();
         renderCalendar();
         renderHolidays();
     } catch(e) {
         console.error(e);
-        document.getElementById('loading').innerHTML = 'Gagal memuat data. <button onclick="loadData()" style="margin-left:8px;padding:6px 14px;background:var(--primary);color:white;border:none;border-radius:6px;cursor:pointer;">Coba Lagi</button>';
+        document.getElementById('loading').innerHTML =
+            `Gagal memuat data. <button onclick="loadData()" style="margin-left:8px;padding:6px 14px;background:var(--primary);color:white;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">Coba Lagi</button>`;
     }
+}
+
+function setLoadingState(isLoading) {
+    document.getElementById('loading').style.display        = isLoading ? 'block' : 'none';
+    document.getElementById('calendarContent').style.display = isLoading ? 'none'  : 'block';
 }
 
 function updateNameFilter() {
@@ -852,12 +910,15 @@ function updateNameFilter() {
         });
     });
     const sel = document.getElementById('nameFilter');
+    const prev = sel.value;
     sel.innerHTML = '<option value="">Semua Orang</option>';
     [...names].sort().forEach(n => {
         const o = document.createElement('option');
         o.value = o.textContent = n;
         sel.appendChild(o);
     });
+    // Restore previous selection if still valid
+    if (prev && [...names].includes(prev)) sel.value = prev;
 }
 
 function filterByName() {
@@ -873,51 +934,409 @@ function getShiftClass(text) {
 }
 
 // ─────────────────────────────────────────
-//  TASK DATA (localStorage)
+//  SHIFT MODAL
 // ─────────────────────────────────────────
-function taskStorageKey() {
-    return TASK_STORAGE_PREFIX + currentBranch;
+function openShiftModal(day) {
+    selectedDay = day;
+    const dk = dateKey(currentYear, currentMonth+1, day);
+    document.getElementById('shiftModalTitle').textContent =
+        `Jadwal Shift ${currentBranch.toUpperCase()} — ${day} ${monthNames[currentMonth]} ${currentYear}`;
+    document.getElementById('shiftInput').value = shiftData[dk] || '';
+    document.getElementById('shiftModal').classList.add('active');
+    setTimeout(() => document.getElementById('shiftInput').focus(), 80);
 }
 
-function loadTasks() {
-    try {
-        const raw = localStorage.getItem(taskStorageKey());
-        if (raw) taskData = JSON.parse(raw);
-        else taskData = { oneoff: {}, weekly: [], monthly: [] };
-    } catch(e) {
-        taskData = { oneoff: {}, weekly: [], monthly: [] };
+function closeShiftModal() {
+    if (isSaving) return;  // block close while saving
+    document.getElementById('shiftModal').classList.remove('active');
+    selectedDay = null;
+}
+
+function setSavingState(saving) {
+    isSaving = saving;
+    const saveBtn   = document.getElementById('btnSaveShift');
+    const deleteBtn = document.getElementById('btnDeleteShift');
+    const cancelBtn = document.getElementById('btnCancelShift');
+    if (saving) {
+        saveBtn.disabled   = true;
+        deleteBtn.disabled = true;
+        cancelBtn.disabled = true;
+        saveBtn.textContent = '⏳ Menyimpan...';
+    } else {
+        saveBtn.disabled   = false;
+        deleteBtn.disabled = false;
+        cancelBtn.disabled = false;
+        saveBtn.textContent = 'Simpan';
     }
 }
 
-function saveTasks() {
-    localStorage.setItem(taskStorageKey(), JSON.stringify(taskData));
+function setDeletingState(deleting) {
+    isSaving = deleting;
+    const saveBtn   = document.getElementById('btnSaveShift');
+    const deleteBtn = document.getElementById('btnDeleteShift');
+    const cancelBtn = document.getElementById('btnCancelShift');
+    if (deleting) {
+        saveBtn.disabled   = true;
+        deleteBtn.disabled = true;
+        cancelBtn.disabled = true;
+        deleteBtn.textContent = '⏳ Menghapus...';
+    } else {
+        saveBtn.disabled   = false;
+        deleteBtn.disabled = false;
+        cancelBtn.disabled = false;
+        deleteBtn.textContent = '🗑 Hapus';
+    }
 }
 
-// Get tasks visible on a specific date
-function getTasksForDate(y, m, d) {
-    const dk = dateKey(y, m+1, d);
+// Because Apps Script with no-cors returns an opaque response, we cannot read
+// the status code. Strategy: optimistic local update + fire-and-forget POST.
+// If the POST itself throws a network error, we roll back and show an error toast.
+async function saveShift() {
+    if (isSaving) return;
+    const raw    = document.getElementById('shiftInput').value;
+    const shifts = normaliseShiftInput(raw);
+    const dk     = dateKey(currentYear, currentMonth+1, selectedDay);
+
+    // Optimistic local update (rollback on network error)
+    const prev = shiftData[dk];
+    if (shifts) shiftData[dk] = shifts;
+    else delete shiftData[dk];
+
+    setSavingState(true);
+    try {
+        await fetch(SCRIPT_URLS[currentBranch], {
+            method:  'POST',
+            mode:    'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ date: dk, names: shifts })
+        });
+        // fetch with no-cors never rejects unless there's a network/CORS-preflight error.
+        // We treat reaching here as "sent successfully".
+        updateNameFilter();
+        renderCalendar();
+        setSavingState(false);
+        closeShiftModal();
+        showToast('✅ Jadwal berhasil disimpan');
+    } catch(e) {
+        // Rollback
+        if (prev !== undefined) shiftData[dk] = prev;
+        else delete shiftData[dk];
+        setSavingState(false);
+        showToast('❌ Gagal menyimpan. Periksa koneksi internet.', 'error');
+        console.error('saveShift error:', e);
+    }
+}
+
+async function deleteShift() {
+    if (isSaving) return;
+    if (!confirm('Hapus semua jadwal di tanggal ini?')) return;
+    const dk   = dateKey(currentYear, currentMonth+1, selectedDay);
+    const prev = shiftData[dk];
+    delete shiftData[dk];
+
+    setDeletingState(true);
+    try {
+        await fetch(SCRIPT_URLS[currentBranch], {
+            method: 'POST',
+            mode:   'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body:   JSON.stringify({ date: dk, names: '' })
+        });
+        updateNameFilter();
+        renderCalendar();
+        setDeletingState(false);
+        closeShiftModal();
+        showToast('🗑 Jadwal berhasil dihapus', 'info');
+    } catch(e) {
+        if (prev !== undefined) shiftData[dk] = prev;
+        setDeletingState(false);
+        showToast('❌ Gagal menghapus. Periksa koneksi internet.', 'error');
+        console.error('deleteShift error:', e);
+    }
+}
+
+// ─────────────────────────────────────────
+//  TASK DATA — Google Sheets (tab Tasks)
+//  Structure: { oneoff: { 'YYYY-MM-DD': [{id,name,type},...] } }
+//  customHolidays: { 'YYYY-MM-DD': 'label' }
+//
+//  All writes are fire-and-forget (no-cors) with optimistic local update.
+//  On load, full Tasks sheet is fetched once; no re-fetch on month change.
+// ─────────────────────────────────────────
+
+function genId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+async function loadTasks() {
+    try {
+        const res  = await fetch(SCRIPT_URLS[currentBranch] + '?action=tasks');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const rows = await res.json();
+
+        taskData       = { oneoff: {}, weekly: [], monthly: [] };
+        customHolidays = {};
+
+        rows.forEach(row => {
+            if (!row.date) return;
+            let dk = row.date;
+            if (dk.includes('T')) {
+                const d = new Date(dk);
+                dk = dateKey(d.getFullYear(), d.getMonth()+1, d.getDate());
+            }
+            if (row.type === '__holiday__') {
+                customHolidays[dk] = row.name || 'Libur Tambahan';
+            } else {
+                if (!taskData.oneoff[dk]) taskData.oneoff[dk] = [];
+                taskData.oneoff[dk].push({ id: row.id, name: row.name, type: row.type || 'tugas' });
+            }
+        });
+    } catch(e) {
+        console.error('loadTasks error:', e);
+        taskData       = { oneoff: {}, weekly: [], monthly: [] };
+        customHolidays = {};
+        showToast('⚠️ Gagal memuat data tugas', 'warning');
+    }
+}
+
+async function postTask(payload) {
+    await fetch(SCRIPT_URLS[currentBranch], {
+        method:  'POST',
+        mode:    'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload)
+    });
+}
+
+async function saveTaskToSheets(dk, name, type, id) {
+    await postTask({ action: 'saveTask', date: dk, name, type, id });
+}
+
+async function deleteTaskFromSheets(id) {
+    await postTask({ action: 'deleteTask', id });
+}
+
+async function saveHolidayToSheets(dk, name) {
+    await postTask({ action: 'saveHoliday', date: dk, name });
+}
+
+async function deleteHolidayFromSheets(dk) {
+    await postTask({ action: 'deleteHoliday', date: dk });
+}
+
+// ─────────────────────────────────────────
+//  PERMANENT TASKS — always visible, not editable
+// ─────────────────────────────────────────
+function getPermanentTasksForDate(y, m, d) {
     const dow = new Date(y, m, d).getDay();
-    const results = [];
+    return PERMANENT_TASKS.filter(t => {
+        if (t.type === 'weekly')      return t.days.includes(dow);
+        if (t.type === 'monthly')     return t.dates.includes(d);
+        if (t.type === 'monthly-odd') return t.dates.includes(d) && (m % 2 === 0);
+        return false;
+    }).map(t => ({ name: t.name, kind: 'permanent-recurring' }));
+}
 
-    // Permanent tasks first
-    getPermanentTasksForDate(y, m, d).forEach(t => results.push(t));
+function getTasksForDate(y, m, d) {
+    const dk  = dateKey(y, m+1, d);
+    const dow = new Date(y, m, d).getDay();
+    return [
+        ...getPermanentTasksForDate(y, m, d),
+        ...(taskData.oneoff[dk] || []).map(t => ({ ...t, kind: t.type || 'tugas' })),
+        ...taskData.weekly.filter(t => t.days.includes(dow)).map(t => ({ ...t, kind: 'recurring' })),
+        ...taskData.monthly.filter(t => t.dates.includes(d)).map(t => ({ ...t, kind: 'recurring' })),
+    ];
+}
 
-    // One-off
-    (taskData.oneoff[dk] || []).forEach(t => {
-        results.push({ ...t, kind: 'oneoff', dk });
+// ─────────────────────────────────────────
+//  TASK MODAL
+// ─────────────────────────────────────────
+function openTaskModal(day) {
+    selectedDay = day;
+    document.getElementById('taskModalTitle').textContent =
+        `Tugas — ${day} ${monthNames[currentMonth]} ${currentYear}`;
+    document.getElementById('taskName').value    = '';
+    document.getElementById('holidayName').value = '';
+    document.getElementById('taskType').value    = 'tugas';
+    document.getElementById('taskNameWrap').style.display    = 'block';
+    document.getElementById('holidayNameWrap').style.display = 'none';
+    document.getElementById('taskNameLabel').textContent     = 'Nama Tugas';
+    document.getElementById('taskName').placeholder          = 'Nama tugas...';
+    document.getElementById('btnAddTask').textContent        = '+ Tambah';
+    renderExistingTasks(day);
+    document.getElementById('taskModal').classList.add('active');
+    setTimeout(() => document.getElementById('taskName').focus(), 80);
+}
+
+function closeTaskModal() {
+    document.getElementById('taskModal').classList.remove('active');
+    selectedDay = null;
+}
+
+function toggleAddOptions() {
+    const v = document.getElementById('taskType').value;
+    const isHoliday = v === 'holiday';
+    document.getElementById('taskNameWrap').style.display    = isHoliday ? 'none'  : 'block';
+    document.getElementById('holidayNameWrap').style.display = isHoliday ? 'block' : 'none';
+
+    const labelMap = {
+        tugas:           'Nama Tugas',
+        kunjungan_kc:    'Keterangan Kunjungan KC',
+        kunjungan_audit: 'Keterangan Kunjungan AUDIT',
+        lainnya:         'Catatan',
+    };
+    const placeholderMap = {
+        tugas:           'Nama tugas...',
+        kunjungan_kc:    'Contoh: Kunjungan Supervisor KC...',
+        kunjungan_audit: 'Contoh: Audit Internal Q1...',
+        lainnya:         'Tulis catatan...',
+    };
+    if (!isHoliday) {
+        document.getElementById('taskNameLabel').textContent = labelMap[v] || 'Catatan';
+        document.getElementById('taskName').placeholder      = placeholderMap[v] || 'Tulis...';
+    }
+    document.getElementById('btnAddTask').textContent = isHoliday ? '+ Tambah Libur' : '+ Tambah';
+}
+
+function renderExistingTasks(day) {
+    const wrap = document.getElementById('existingTasksList');
+    wrap.innerHTML = '';
+    const dk  = dateKey(currentYear, currentMonth+1, day);
+    const dow = new Date(currentYear, currentMonth, day).getDay();
+
+    // Custom holiday on this date (deletable)
+    const hdk = dateKey(currentYear, currentMonth+1, day);
+    if (customHolidays[hdk]) {
+        const div = document.createElement('div');
+        div.className = 'task-existing-item';
+        div.style.cssText = 'background:var(--danger-light);';
+        div.innerHTML = `<span>${customHolidays[hdk]}<span class="task-badge" style="background:#fecaca;color:#991b1b;">Libur Tambahan</span></span>`;
+        const btn = document.createElement('button');
+        btn.className = 'task-del-btn'; btn.textContent = '✕';
+        btn.onclick = async () => {
+            if (confirm('Hapus libur tambahan di tanggal ini?')) {
+                const prev = customHolidays[hdk];
+                delete customHolidays[hdk];
+                renderExistingTasks(day); renderCalendar(); renderHolidays();
+                showToast('Libur tambahan dihapus', 'info');
+                try { await deleteHolidayFromSheets(hdk); }
+                catch(e) { customHolidays[hdk] = prev; renderExistingTasks(day); renderCalendar(); renderHolidays(); showToast('❌ Gagal hapus libur', 'error'); }
+            }
+        };
+        div.appendChild(btn);
+        wrap.appendChild(div);
+    }
+
+    // Permanent (read-only) — tanpa emot
+    getPermanentTasksForDate(currentYear, currentMonth, day).forEach(t => {
+        const div = document.createElement('div');
+        div.className = 'task-existing-item';
+        div.style.cssText = 'background:#e0f2fe;';
+        div.innerHTML = `<span>${t.name}<span class="task-badge" style="background:#bae6fd;color:#0369a1;">Tugas Tetap</span></span>`;
+        const lk = document.createElement('span');
+        lk.title = 'Tugas tetap tidak dapat dihapus';
+        lk.style.cssText = 'padding:2px 8px;color:#0369a1;font-size:0.9em;cursor:default;';
+        lk.textContent = '🔒';
+        div.appendChild(lk);
+        wrap.appendChild(div);
     });
 
-    // Weekly (user-created)
-    taskData.weekly.forEach(t => {
-        if (t.days.includes(dow)) results.push({ ...t, kind: 'recurring' });
+    // One-off (tugas, kunjungan_kc, kunjungan_audit, lainnya)
+    (taskData.oneoff[dk] || []).forEach((t, idx) => {
+        wrap.appendChild(buildTaskRow(t.name, t.type || 'tugas', async () => {
+            const removed = taskData.oneoff[dk].splice(idx, 1)[0];
+            if (!taskData.oneoff[dk].length) delete taskData.oneoff[dk];
+            renderExistingTasks(day); renderCalendar();
+            showToast('Catatan dihapus', 'info');
+            try { await deleteTaskFromSheets(removed.id); }
+            catch(e) {
+                if (!taskData.oneoff[dk]) taskData.oneoff[dk] = [];
+                taskData.oneoff[dk].splice(idx, 0, removed);
+                renderExistingTasks(day); renderCalendar();
+                showToast('❌ Gagal hapus catatan', 'error');
+            }
+        }));
     });
 
-    // Monthly (user-created)
-    taskData.monthly.forEach(t => {
-        if (t.dates.includes(d)) results.push({ ...t, kind: 'recurring' });
-    });
+    // (weekly/monthly recurring kept in data model for future use)
 
-    return results;
+    if (!wrap.children.length) {
+        wrap.innerHTML = '<div style="font-size:0.85em;color:var(--text-muted);font-style:italic;padding:4px 0;">Belum ada tugas pada tanggal ini.</div>';
+    }
+}
+
+// Badge styling per note type
+const NOTE_BADGE = {
+    tugas:           { bg: 'var(--primary-light)', color: 'var(--primary-dark)', label: 'Tugas Harian'      },
+    kunjungan_kc:    { bg: '#fef3c7',              color: '#92400e',             label: 'Kunjungan KC'      },
+    kunjungan_audit: { bg: '#ede9fe',              color: '#5b21b6',             label: 'Kunjungan AUDIT'   },
+    lainnya:         { bg: '#f0fdf4',              color: '#166534',             label: 'Lainnya'           },
+    oneoff:          { bg: 'var(--primary-light)', color: 'var(--primary-dark)', label: 'Tugas'             },
+    recurring:       { bg: 'var(--accent-light)',  color: '#c2410c',             label: 'Berulang'          },
+};
+
+function buildTaskRow(name, kind, onDelete) {
+    const div = document.createElement('div');
+    div.className = 'task-existing-item';
+    const b = NOTE_BADGE[kind] || NOTE_BADGE['oneoff'];
+    div.innerHTML = `<span>${name}<span class="task-badge" style="background:${b.bg};color:${b.color};">${b.label}</span></span>`;
+    const btn = document.createElement('button');
+    btn.className   = 'task-del-btn';
+    btn.textContent = '✕';
+    btn.onclick     = onDelete;
+    div.appendChild(btn);
+    return div;
+}
+
+async function addTask() {
+    const type = document.getElementById('taskType').value;
+    const dk   = dateKey(currentYear, currentMonth+1, selectedDay);
+    const btn  = document.getElementById('btnAddTask');
+    btn.disabled = true;
+
+    if (type === 'holiday') {
+        const label = document.getElementById('holidayName').value.trim() || 'Libur Tambahan';
+        if (customHolidays[dk]) {
+            showToast('⚠️ Tanggal ini sudah memiliki libur tambahan', 'warning');
+            btn.disabled = false; return;
+        }
+        customHolidays[dk] = label;
+        document.getElementById('holidayName').value = '';
+        renderExistingTasks(selectedDay); renderCalendar(); renderHolidays();
+        showToast('✅ Libur tambahan ditambahkan');
+        btn.disabled = false;
+        try { await saveHolidayToSheets(dk, label); }
+        catch(e) { delete customHolidays[dk]; renderExistingTasks(selectedDay); renderCalendar(); renderHolidays(); showToast('❌ Gagal simpan libur', 'error'); }
+        return;
+    }
+
+    // Semua tipe berbasis teks
+    const name = document.getElementById('taskName').value.trim();
+    if (!name) {
+        showToast('⚠️ Kolom tidak boleh kosong', 'warning');
+        document.getElementById('taskName').focus();
+        btn.disabled = false; return;
+    }
+
+    const id = genId();
+    if (!taskData.oneoff[dk]) taskData.oneoff[dk] = [];
+    taskData.oneoff[dk].push({ id, name, type });
+
+    document.getElementById('taskName').value = '';
+    renderExistingTasks(selectedDay); renderCalendar();
+    const toastLabel = { tugas:'Tugas Harian', kunjungan_kc:'Kunjungan KC', kunjungan_audit:'Kunjungan AUDIT', lainnya:'Catatan' };
+    showToast(`✅ ${toastLabel[type] || 'Catatan'} ditambahkan`);
+    btn.disabled = false;
+
+    try { await saveTaskToSheets(dk, name, type, id); }
+    catch(e) {
+        const arr = taskData.oneoff[dk];
+        const i   = arr.findIndex(t => t.id === id);
+        if (i > -1) arr.splice(i, 1);
+        if (!arr.length) delete taskData.oneoff[dk];
+        renderExistingTasks(selectedDay); renderCalendar();
+        showToast('❌ Gagal simpan catatan', 'error');
+    }
 }
 
 // ─────────────────────────────────────────
@@ -928,8 +1347,8 @@ function renderCalendar() {
     const grid = document.getElementById('daysGrid');
     grid.innerHTML = '';
 
-    const jsDay   = new Date(currentYear, currentMonth, 1).getDay();
-    const firstDay = jsDay === 0 ? 6 : jsDay - 1;
+    const jsDay       = new Date(currentYear, currentMonth, 1).getDay();
+    const firstDay    = jsDay === 0 ? 6 : jsDay - 1;
     const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
 
     for (let i = 0; i < firstDay; i++) {
@@ -939,10 +1358,10 @@ function renderCalendar() {
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-        const dk  = dateKey(currentYear, currentMonth+1, day);
-        const red = isRedDate(currentYear, currentMonth, day);
-        const hname = getHolidayName(currentYear, currentMonth, day);
-        const isToday = (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear());
+        const dk      = dateKey(currentYear, currentMonth+1, day);
+        const red     = isRedDate(currentYear, currentMonth, day);
+        const hname   = getHolidayName(currentYear, currentMonth, day);
+        const isToday = day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
 
         const cell = document.createElement('div');
         cell.className = 'day-cell' + (red ? ' red-day' : '') + (isToday ? ' today' : '');
@@ -956,7 +1375,7 @@ function renderCalendar() {
         // Holiday label
         if (hname) {
             const hl = document.createElement('span');
-            hl.className = 'holiday-label';
+            hl.className   = 'holiday-label';
             hl.textContent = hname;
             cell.appendChild(hl);
         }
@@ -969,7 +1388,7 @@ function renderCalendar() {
                     const name = shift.replace(/\s*\([LPS]\)/g,'').trim();
                     if (selectedFilter && name !== selectedFilter) return;
                     const item = document.createElement('div');
-                    item.className = `shift-item ${getShiftClass(shift)}`;
+                    item.className   = `shift-item ${getShiftClass(shift)}`;
                     item.textContent = shift.trim();
                     list.appendChild(item);
                 });
@@ -977,13 +1396,12 @@ function renderCalendar() {
             cell.appendChild(list);
             cell.onclick = () => openShiftModal(day);
         } else {
-            const list = document.createElement('div');
+            const list  = document.createElement('div');
             list.className = 'task-list';
-            const tasks = getTasksForDate(currentYear, currentMonth, day);
-            tasks.forEach(t => {
+            getTasksForDate(currentYear, currentMonth, day).forEach(t => {
                 const item = document.createElement('div');
-                item.className = `task-item ${t.kind}`;
-                item.innerHTML = `<span class="task-icon">${t.kind === 'permanent-recurring' ? '🔧' : t.kind === 'recurring' ? '🔁' : '📌'}</span>${t.name}`;
+                item.className   = `task-item ${t.kind}`;
+                item.innerHTML   = `<span class="task-icon">${t.kind === 'recurring' ? '🔁' : t.kind === 'oneoff' ? '📌' : ''}</span>${t.name}`;
                 list.appendChild(item);
             });
             cell.appendChild(list);
@@ -997,216 +1415,38 @@ function renderCalendar() {
 }
 
 // ─────────────────────────────────────────
-//  RENDER HOLIDAYS
+//  RENDER HOLIDAY PANEL
 // ─────────────────────────────────────────
 function renderHolidays() {
-    const grid = document.getElementById('holidayGrid');
-    grid.innerHTML = '';
-
+    const grid        = document.getElementById('holidayGrid');
     const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
-    const holidays = [];
+    const holidays    = [];
+    grid.innerHTML    = '';
 
     for (let d = 1; d <= daysInMonth; d++) {
         const dk = dateKey(currentYear, currentMonth+1, d);
-        const hn = nationalHolidays[dk];
-        if (hn) {
-            const dayOfWeek = dayNames[new Date(currentYear, currentMonth, d).getDay()];
-            holidays.push({ day: d, dayName: dayOfWeek, name: hn });
-        }
+        const hn = nationalHolidays[dk] || customHolidays[dk];
+        const isCustom = !nationalHolidays[dk] && !!customHolidays[dk];
+        if (hn) holidays.push({ day: d, dayName: dayNames[new Date(currentYear, currentMonth, d).getDay()], name: hn, custom: isCustom });
     }
 
-    if (holidays.length === 0) {
-        grid.innerHTML = '<span class="no-holiday">Tidak ada libur nasional bulan ini.</span>';
+    if (!holidays.length) {
+        grid.innerHTML = '<span class="no-holiday">Tidak ada libur bulan ini.</span>';
         return;
     }
 
     holidays.forEach(h => {
         const chip = document.createElement('div');
         chip.className = 'holiday-chip';
-        chip.innerHTML = `<span class="hdate">${String(h.day).padStart(2,'0')} ${monthNames[currentMonth].slice(0,3)}<br>${h.dayName}</span><span class="hname">${h.name}</span>`;
+        if (h.custom) chip.style.borderLeftColor = '#f97316';
+        chip.innerHTML = `<span class="hdate">${String(h.day).padStart(2,'0')} ${monthNames[currentMonth].slice(0,3)}<br>${h.dayName}</span><span class="hname">${h.name}${h.custom ? ' <span style="font-size:0.78em;color:#f97316;">(Tambahan)</span>' : ''}</span>`;
         grid.appendChild(chip);
     });
 }
 
 // ─────────────────────────────────────────
-//  SHIFT MODAL
-// ─────────────────────────────────────────
-function openShiftModal(day) {
-    selectedDay = day;
-    const dk = dateKey(currentYear, currentMonth+1, day);
-    document.getElementById('shiftModalTitle').textContent =
-        `Jadwal Shift ${currentBranch.toUpperCase()} — ${day} ${monthNames[currentMonth]} ${currentYear}`;
-    document.getElementById('shiftInput').value = shiftData[dk] || '';
-    document.getElementById('shiftModal').classList.add('active');
-    document.getElementById('shiftInput').focus();
-}
-
-function closeShiftModal() {
-    document.getElementById('shiftModal').classList.remove('active');
-    selectedDay = null;
-}
-
-async function saveShift() {
-    const shifts = document.getElementById('shiftInput').value.trim();
-    const dk = dateKey(currentYear, currentMonth+1, selectedDay);
-    try {
-        await fetch(SCRIPT_URLS[currentBranch], {
-            method: 'POST', mode: 'no-cors',
-            body: JSON.stringify({ date: dk, names: shifts })
-        });
-        if (shifts) shiftData[dk] = shifts;
-        else delete shiftData[dk];
-        updateNameFilter(); renderCalendar(); closeShiftModal();
-    } catch(e) { alert('Gagal menyimpan. Silakan coba lagi.'); }
-}
-
-async function deleteShift() {
-    if (!confirm('Hapus semua jadwal di tanggal ini?')) return;
-    const dk = dateKey(currentYear, currentMonth+1, selectedDay);
-    try {
-        await fetch(SCRIPT_URLS[currentBranch], {
-            method: 'POST', mode: 'no-cors',
-            body: JSON.stringify({ date: dk, names: '' })
-        });
-        delete shiftData[dk];
-        updateNameFilter(); renderCalendar(); closeShiftModal();
-    } catch(e) { alert('Gagal menghapus. Silakan coba lagi.'); }
-}
-
-// ─────────────────────────────────────────
-//  TASK MODAL
-// ─────────────────────────────────────────
-function openTaskModal(day) {
-    selectedDay = day;
-    document.getElementById('taskModalTitle').textContent =
-        `Tugas — ${day} ${monthNames[currentMonth]} ${currentYear}`;
-    document.getElementById('taskName').value = '';
-    document.getElementById('taskType').value = 'oneoff';
-
-    // Reset recurring options
-    document.getElementById('weeklyOptions').classList.remove('visible');
-    document.getElementById('monthlyOptions').classList.remove('visible');
-    document.querySelectorAll('#weeklyOptions input[type=checkbox]').forEach(cb => cb.checked = false);
-    document.getElementById('mDate1').value = '';
-    document.getElementById('mDate2').value = '';
-    document.getElementById('mDate3').value = '';
-
-    renderExistingTasks(day);
-    document.getElementById('taskModal').classList.add('active');
-    document.getElementById('taskName').focus();
-}
-
-function closeTaskModal() {
-    document.getElementById('taskModal').classList.remove('active');
-    selectedDay = null;
-}
-
-function toggleRecurOptions() {
-    const v = document.getElementById('taskType').value;
-    document.getElementById('weeklyOptions').classList.toggle('visible', v === 'weekly');
-    document.getElementById('monthlyOptions').classList.toggle('visible', v === 'monthly');
-}
-
-function renderExistingTasks(day) {
-    const wrap = document.getElementById('existingTasksList');
-    wrap.innerHTML = '';
-    const dk = dateKey(currentYear, currentMonth+1, day);
-    const dow = new Date(currentYear, currentMonth, day).getDay();
-
-    // Permanent tasks (read-only)
-    getPermanentTasksForDate(currentYear, currentMonth, day).forEach(t => {
-        const div = document.createElement('div');
-        div.className = 'task-existing-item';
-        div.style.background = '#e0f2fe';
-        div.innerHTML = `<span>🔧 ${t.name}<span class="task-badge" style="background:#bae6fd;color:#0369a1;">Tugas Tetap</span></span>`;
-        const lk = document.createElement('span');
-        lk.textContent = '🔒';
-        lk.title = 'Tugas tetap tidak dapat dihapus';
-        lk.style.cssText = 'padding:2px 6px;color:#0369a1;font-size:0.9em;';
-        div.appendChild(lk);
-        wrap.appendChild(div);
-    });
-
-    // One-off on this date
-    (taskData.oneoff[dk] || []).forEach((t, idx) => {
-        wrap.appendChild(buildTaskRow(t.name, 'oneoff', () => {
-            taskData.oneoff[dk].splice(idx, 1);
-            if (taskData.oneoff[dk].length === 0) delete taskData.oneoff[dk];
-            saveTasks(); renderExistingTasks(day); renderCalendar();
-        }));
-    });
-
-    // Weekly matching this day
-    taskData.weekly.forEach((t, idx) => {
-        if (!t.days.includes(dow)) return;
-        wrap.appendChild(buildTaskRow(t.name, 'recurring', () => {
-            if (confirm(`Hapus tugas berulang "${t.name}" dari semua hari?`)) {
-                taskData.weekly.splice(idx, 1);
-                saveTasks(); renderExistingTasks(day); renderCalendar();
-            }
-        }));
-    });
-
-    // Monthly matching this date
-    taskData.monthly.forEach((t, idx) => {
-        if (!t.dates.includes(day)) return;
-        wrap.appendChild(buildTaskRow(t.name, 'recurring', () => {
-            if (confirm(`Hapus tugas berulang "${t.name}" dari semua tanggal?`)) {
-                taskData.monthly.splice(idx, 1);
-                saveTasks(); renderExistingTasks(day); renderCalendar();
-            }
-        }));
-    });
-
-    if (wrap.children.length === 0) {
-        wrap.innerHTML = '<div style="font-size:0.85em;color:var(--text-muted);font-style:italic;">Belum ada tugas pada tanggal ini.</div>';
-    }
-}
-
-function buildTaskRow(name, kind, onDelete) {
-    const div = document.createElement('div');
-    div.className = 'task-existing-item';
-    div.innerHTML = `<span>${name}<span class="task-badge ${kind}">${kind === 'recurring' ? '🔁 Berulang' : '📌 Sekali'}</span></span>`;
-    const btn = document.createElement('button');
-    btn.className = 'task-del-btn'; btn.textContent = '✕';
-    btn.onclick = onDelete;
-    div.appendChild(btn);
-    return div;
-}
-
-function addTask() {
-    const name = document.getElementById('taskName').value.trim();
-    if (!name) { document.getElementById('taskName').focus(); return; }
-    const type = document.getElementById('taskType').value;
-    const dk   = dateKey(currentYear, currentMonth+1, selectedDay);
-
-    if (type === 'oneoff') {
-        if (!taskData.oneoff[dk]) taskData.oneoff[dk] = [];
-        taskData.oneoff[dk].push({ name });
-
-    } else if (type === 'weekly') {
-        const days = [...document.querySelectorAll('#weeklyOptions input[type=checkbox]:checked')].map(cb => parseInt(cb.value));
-        if (days.length === 0) { alert('Pilih minimal satu hari.'); return; }
-        taskData.weekly.push({ name, days });
-
-    } else if (type === 'monthly') {
-        const dates = [
-            document.getElementById('mDate1').value,
-            document.getElementById('mDate2').value,
-            document.getElementById('mDate3').value
-        ].map(v => parseInt(v)).filter(v => !isNaN(v) && v >= 1 && v <= 31);
-        if (dates.length === 0) { alert('Masukkan minimal satu tanggal.'); return; }
-        taskData.monthly.push({ name, dates });
-    }
-
-    saveTasks();
-    document.getElementById('taskName').value = '';
-    renderExistingTasks(selectedDay);
-    renderCalendar();
-}
-
-// ─────────────────────────────────────────
-//  MONTH NAV
+//  MONTH NAV — only re-renders, no extra fetch
+//  (all shift data is already in shiftData from the initial load)
 // ─────────────────────────────────────────
 function changeMonth(dir) {
     currentMonth += dir;
@@ -1216,7 +1456,7 @@ function changeMonth(dir) {
 }
 
 // ─────────────────────────────────────────
-//  CLOSE MODAL ON BACKDROP CLICK
+//  MODAL — close on backdrop click or Escape
 // ─────────────────────────────────────────
 document.getElementById('shiftModal').addEventListener('click', function(e) {
     if (e.target === this) closeShiftModal();
