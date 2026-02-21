@@ -4,1191 +4,1183 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jadwal PGI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #3d5af1;
+            --primary-light: #e8ecff;
+            --primary-dark: #2a3db0;
+            --accent: #f97316;
+            --accent-light: #fff3e8;
+            --success: #10b981;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --purple: #8b5cf6;
+            --purple-light: #ede9fe;
+            --bg: #f0f2fa;
+            --surface: #ffffff;
+            --border: #e2e5f1;
+            --text: #1a1d2e;
+            --text-muted: #6b7280;
+            --radius: 14px;
+            --radius-sm: 8px;
+            --shadow: 0 4px 20px rgba(61,90,241,0.08);
+            --shadow-lg: 0 12px 40px rgba(61,90,241,0.15);
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
             min-height: 100vh;
             padding: 20px;
+            color: var(--text);
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
+        /* ── BRANCH SELECTION ── */
+        .branch-screen {
+            position: fixed; inset: 0;
+            background: linear-gradient(135deg, #1a1d2e 0%, #2d3561 60%, #3d5af1 100%);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; padding: 20px;
         }
+        .branch-screen.hidden { display: none; }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 1.1em;
-        }
-
-        .branch-selection-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 20px;
-        }
-
-        .branch-selection-screen.hidden {
-            display: none;
-        }
-
-        .branch-selection-content {
-            background: white;
-            border-radius: 20px;
+        .branch-card {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 24px;
             padding: 50px 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             text-align: center;
-            max-width: 500px;
-            width: 100%;
+            max-width: 440px; width: 100%;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        }
+        .branch-card .logo {
+            width: 64px; height: 64px;
+            background: var(--primary);
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; margin: 0 auto 24px;
+            box-shadow: 0 8px 24px rgba(61,90,241,0.4);
+        }
+        .branch-card h2 { font-size: 1.8em; color: white; font-weight: 800; margin-bottom: 8px; }
+        .branch-card p { color: rgba(255,255,255,0.6); margin-bottom: 36px; font-size: 0.95em; }
+        .branch-buttons { display: flex; flex-direction: column; gap: 12px; }
+        .branch-btn {
+            padding: 18px 24px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.08);
+            color: white; border-radius: var(--radius);
+            font-size: 1.1em; font-weight: 600;
+            cursor: pointer; transition: all 0.25s;
+            font-family: inherit;
+            display: flex; align-items: center; gap: 12px; justify-content: center;
+        }
+        .branch-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(61,90,241,0.4);
         }
 
-        .branch-selection-content h2 {
-            font-size: 2em;
-            color: #333;
-            margin-bottom: 15px;
+        /* ── MAIN CONTAINER ── */
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
         }
 
-        .branch-selection-content p {
-            font-size: 1.1em;
-            color: #666;
-            margin-bottom: 40px;
-        }
-
-        .branch-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .branch-select-btn {
-            padding: 20px 30px;
-            border: 3px solid #667eea;
-            background: white;
-            color: #667eea;
-            border-radius: 12px;
-            font-size: 1.3em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .branch-select-btn:hover {
-            background: #667eea;
-            color: white;
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .filter-section {
-            background: #f8f9fa;
-            padding: 15px 30px;
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(135deg, #1a1d2e 0%, #2d3561 60%, #3d5af1 100%);
+            border-radius: 20px 20px 0 0;
+            padding: 28px 32px;
+            display: flex; align-items: center; gap: 20px;
             flex-wrap: wrap;
         }
+        .header-icon {
+            width: 52px; height: 52px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+        }
+        .header-text h1 { color: white; font-size: 1.6em; font-weight: 800; }
+        .header-text p { color: rgba(255,255,255,0.6); font-size: 0.875em; margin-top: 2px; }
+        .header-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+        .btn-ghost {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white; border-radius: var(--radius-sm);
+            cursor: pointer; font-size: 0.85em;
+            font-family: inherit; font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.2); }
 
-        .filter-group label {
-            font-weight: 600;
-            color: #495057;
+        /* ── CALENDAR TOGGLE ── */
+        .calendar-toggle {
+            background: var(--surface);
+            padding: 16px 24px;
+            display: flex; align-items: center; gap: 12px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+        .toggle-label { font-weight: 700; font-size: 0.875em; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .toggle-pills {
+            display: flex; gap: 4px;
+            background: var(--bg);
+            padding: 4px; border-radius: 10px;
+        }
+        .toggle-pill {
+            padding: 8px 20px;
+            border: none; border-radius: 7px;
+            font-family: inherit; font-weight: 600;
+            font-size: 0.9em; cursor: pointer;
+            transition: all 0.2s;
+            background: transparent; color: var(--text-muted);
+        }
+        .toggle-pill.active {
+            background: var(--surface);
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(61,90,241,0.15);
+        }
+        .toggle-pill.task-active {
+            background: var(--surface);
+            color: var(--accent);
+            box-shadow: 0 2px 8px rgba(249,115,22,0.15);
         }
 
-        .filter-group select {
+        /* ── TOOLBAR ── */
+        .toolbar {
+            background: var(--surface);
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 12px;
+            flex-wrap: wrap;
+        }
+        .toolbar select {
             padding: 8px 12px;
-            border: 2px solid #dee2e6;
-            border-radius: 6px;
-            font-size: 1em;
-            min-width: 200px;
-            cursor: pointer;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit; font-size: 0.9em;
+            background: var(--bg); color: var(--text);
+            cursor: pointer; min-width: 180px;
         }
+        .toolbar select:focus { outline: none; border-color: var(--primary); }
+        .filter-label { font-weight: 600; font-size: 0.875em; color: var(--text-muted); }
 
-        .filter-group select:focus {
-            outline: none;
-            border-color: #667eea;
+        /* ── NAV ── */
+        .cal-nav {
+            background: var(--surface);
+            padding: 14px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 2px solid var(--border);
+            gap: 12px; flex-wrap: wrap;
         }
-
-        .calendar-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 30px;
-            background: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
+        .nav-btn {
+            padding: 9px 18px;
+            background: var(--primary-light);
+            color: var(--primary); border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit; font-weight: 600;
+            font-size: 0.9em; cursor: pointer;
+            transition: all 0.2s;
         }
+        .nav-btn:hover { background: var(--primary); color: white; }
+        .month-year { font-size: 1.3em; font-weight: 800; color: var(--text); }
 
-        .calendar-nav button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background 0.3s;
-        }
-
-        .calendar-nav button:hover {
-            background: #5568d3;
-        }
-
-        .month-year {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .calendar {
-            padding: 30px;
-            overflow-x: auto;
-        }
-
+        /* ── CALENDAR GRID ── */
+        .calendar-wrap { background: var(--surface); padding: 24px; overflow-x: auto; }
         .days-header {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            margin-bottom: 10px;
-            min-width: 700px;
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 8px; margin-bottom: 8px; min-width: 700px;
         }
-
         .day-name {
-            text-align: center;
-            font-weight: bold;
-            color: #667eea;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            text-align: center; font-weight: 700;
+            font-size: 0.8em; letter-spacing: 0.04em;
+            color: var(--text-muted);
+            padding: 8px; text-transform: uppercase;
         }
-
+        .day-name.weekend { color: var(--danger); }
         .days-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            min-width: 700px;
+            display: grid; grid-template-columns: repeat(7, 1fr);
+            gap: 8px; min-width: 700px;
         }
-
         .day-cell {
-            min-height: 100px;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
+            min-height: 110px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
             padding: 10px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s;
+            background: var(--surface);
+            cursor: pointer; transition: all 0.2s;
             position: relative;
         }
-
-        .day-cell:hover {
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-            transform: translateY(-2px);
+        .day-cell:hover:not(.empty) {
+            border-color: var(--primary);
+            box-shadow: var(--shadow);
+            transform: translateY(-1px);
         }
-
-        .day-cell.empty {
-            background: #f8f9fa;
-            cursor: default;
-        }
-
-        .day-cell.empty:hover {
-            box-shadow: none;
-            transform: none;
-        }
+        .day-cell.empty { background: var(--bg); cursor: default; border-color: transparent; }
+        .day-cell.today { border-color: var(--primary); background: var(--primary-light); }
+        .day-cell.red-day { background: #fff8f8; }
 
         .day-number {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 8px;
+            font-size: 1em; font-weight: 700; color: var(--text);
+            margin-bottom: 4px; font-family: 'DM Mono', monospace;
+        }
+        .day-number.red { color: var(--danger); }
+        .day-number.today-num {
+            color: white;
+            background: var(--primary);
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.85em;
         }
 
-        .day-number.red-date {
-            color: #dc3545;
+        .holiday-label {
+            font-size: 0.65em;
+            color: var(--danger);
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 5px;
+            display: block;
         }
 
-        .shift-list {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
+        /* Shift items */
+        .shift-list { display: flex; flex-direction: column; gap: 3px; }
         .shift-item {
-            padding: 6px 8px;
-            border-radius: 6px;
-            font-size: 0.85em;
-            line-height: 1.3;
+            padding: 4px 7px;
+            border-radius: 5px;
+            font-size: 0.78em;
+            font-weight: 500; line-height: 1.3;
         }
+        .shift-item.libur { background: var(--danger-light); color: #b91c1c; }
+        .shift-item.pulsor { background: var(--success-light); color: #065f46; }
+        .shift-item.siang { background: var(--warning-light); color: #92400e; }
+        .shift-item.normal { background: var(--primary-light); color: var(--primary-dark); }
 
-        .shift-item.libur {
-            background: #ffe0e0;
-            color: #c92a2a;
-            font-weight: 600;
+        /* Task items */
+        .task-list { display: flex; flex-direction: column; gap: 3px; }
+        .task-item {
+            padding: 4px 7px;
+            border-radius: 5px;
+            font-size: 0.78em;
+            font-weight: 500; line-height: 1.3;
+            display: flex; align-items: flex-start; gap: 4px;
         }
+        .task-item.oneoff { background: var(--purple-light); color: #5b21b6; }
+        .task-item.recurring { background: var(--accent-light); color: #c2410c; }
+        .task-item .task-icon { font-size: 0.9em; flex-shrink: 0; }
 
-        .shift-item.pulsor {
-            background: #d3f9f6;
-            color: #087f5b;
+        /* ── HOLIDAY SECTION ── */
+        .holiday-section {
+            background: var(--surface);
+            padding: 24px;
+            border-top: 2px solid var(--border);
         }
-
-        .shift-item.siang {
-            background: #fff4cc;
-            color: #c68c00;
+        .section-title {
+            font-size: 1em; font-weight: 800;
+            color: var(--text); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
         }
-
-        .shift-item.normal {
-            background: #d3f9d8;
-            color: #2f9e44;
-        }
-
-        .summary-section {
-            padding: 30px;
-            background: #f8f9fa;
-            border-top: 2px solid #e9ecef;
-        }
-
-        .summary-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .summary-table th {
-            background: #667eea;
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-        }
-
-        .summary-table td {
-            padding: 12px;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .summary-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .summary-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            font-weight: 600;
-            min-width: 30px;
-            text-align: center;
-        }
-
-        .badge.libur { background: #ffe0e0; color: #c92a2a; }
-        .badge.pulsor { background: #d3f9f6; color: #087f5b; }
-        .badge.siang { background: #fff4cc; color: #c68c00; }
-
-        .legend {
-            padding: 20px 30px;
-            background: white;
-            border-top: 2px solid #e9ecef;
-        }
-
-        .legend-title {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .legend-items {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-        }
-
-        .legend-color.libur { background: #ff6b6b; }
-        .legend-color.pulsor { background: #4ecdc4; }
-        .legend-color.siang { background: #ffd93d; }
-        .legend-color.normal { background: #95e1d3; }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            overflow-y: auto;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            margin: 20px;
-        }
-
-        .modal-content h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .modal-content textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 1em;
-            margin-bottom: 10px;
-            font-family: inherit;
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .modal-content textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .modal-help {
-            background: #f8f9fa;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.85em;
-            color: #495057;
-            margin-bottom: 20px;
-        }
-
-        .modal-buttons {
-            display: flex;
+        .holiday-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
             gap: 10px;
-            justify-content: flex-end;
+        }
+        .holiday-chip {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 10px 14px;
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--danger);
+        }
+        .holiday-chip .hdate {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8em; font-weight: 500;
+            color: var(--danger); white-space: nowrap;
+        }
+        .holiday-chip .hname {
+            font-size: 0.85em; font-weight: 600; color: var(--text);
+        }
+        .no-holiday {
+            color: var(--text-muted); font-size: 0.9em;
+            font-style: italic;
         }
 
-        .modal-buttons button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: all 0.3s;
+        /* ── LEGEND ── */
+        .legend {
+            background: var(--surface);
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            border-radius: 0 0 20px 20px;
+            display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+        }
+        .legend-label { font-size: 0.8em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.83em; font-weight: 500; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+        .ld-libur { background: var(--danger); }
+        .ld-pulsor { background: var(--success); }
+        .ld-siang { background: var(--warning); }
+        .ld-normal { background: var(--primary); }
+        .ld-oneoff { background: var(--purple); }
+        .ld-recurring { background: var(--accent); }
+
+        /* ── MODAL ── */
+        .modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(26,29,46,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal.active { display: flex; }
+        .modal-box {
+            background: var(--surface);
+            border-radius: 20px;
+            width: 100%; max-width: 520px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .modal-header h2 { font-size: 1.05em; font-weight: 800; }
+        .modal-close {
+            width: 32px; height: 32px;
+            background: var(--bg); border: none; border-radius: 8px;
+            cursor: pointer; font-size: 1.1em;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .modal-close:hover { background: var(--danger-light); color: var(--danger); }
+        .modal-body { padding: 20px 24px; }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex; gap: 8px; justify-content: flex-end;
         }
 
-        .btn-save {
-            background: #667eea;
-            color: white;
+        .form-group { margin-bottom: 16px; }
+        .form-label { font-size: 0.85em; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit; font-size: 0.95em;
+            background: var(--bg); color: var(--text);
+            transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none; border-color: var(--primary);
+        }
+        .form-textarea { min-height: 100px; resize: vertical; }
+
+        .help-box {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 12px; font-size: 0.8em;
+            color: var(--text-muted); margin-bottom: 14px;
+            border-left: 3px solid var(--primary);
+            line-height: 1.6;
         }
 
-        .btn-save:hover {
-            background: #5568d3;
+        /* recurring options */
+        .recur-options {
+            display: none;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px; background: var(--bg);
+            margin-top: 10px;
         }
-
-        .btn-delete {
-            background: #ff6b6b;
-            color: white;
+        .recur-options.visible { display: block; }
+        .recur-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+        .recur-row:last-child { margin-bottom: 0; }
+        .recur-row label { font-size: 0.85em; font-weight: 600; color: var(--text-muted); min-width: 80px; }
+        .checkboxes { display: flex; gap: 8px; flex-wrap: wrap; }
+        .day-check { display: flex; align-items: center; gap: 4px; font-size: 0.82em; cursor: pointer; }
+        .date-inputs {
+            display: flex; flex-wrap: wrap; gap: 6px;
         }
-
-        .btn-delete:hover {
-            background: #ff5252;
+        .date-num-input {
+            width: 50px; padding: 6px 8px;
+            border: 1.5px solid var(--border); border-radius: 6px;
+            font-family: inherit; font-size: 0.85em;
+            text-align: center; background: var(--surface);
         }
+        .date-num-input:focus { outline: none; border-color: var(--primary); }
 
-        .btn-cancel {
-            background: #e9ecef;
-            color: #333;
+        /* Task list in modal */
+        .task-existing { margin-bottom: 14px; }
+        .task-existing-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 10px; border-radius: 8px;
+            background: var(--bg); margin-bottom: 6px;
+            font-size: 0.88em;
         }
-
-        .btn-cancel:hover {
-            background: #dee2e6;
+        .task-existing-item span { flex: 1; }
+        .task-badge {
+            padding: 2px 8px; border-radius: 20px; font-size: 0.75em; font-weight: 600; margin-left: 8px;
         }
+        .task-badge.oneoff { background: var(--purple-light); color: #5b21b6; }
+        .task-badge.recurring { background: var(--accent-light); color: #c2410c; }
+        .task-del-btn {
+            border: none; background: none; cursor: pointer;
+            color: var(--danger); font-size: 1em; padding: 2px 6px;
+            border-radius: 4px; transition: background 0.2s;
+        }
+        .task-del-btn:hover { background: var(--danger-light); }
 
+        /* Buttons */
+        .btn {
+            padding: 10px 20px; border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit; font-weight: 600;
+            font-size: 0.9em; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-primary.task { background: var(--accent); }
+        .btn-primary.task:hover { background: #ea6c0a; }
+        .btn-danger { background: var(--danger-light); color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        .btn-secondary { background: var(--bg); color: var(--text); }
+        .btn-secondary:hover { background: var(--border); }
+
+        /* Loading */
         .loading {
-            text-align: center;
-            padding: 40px;
-            color: #667eea;
-            font-size: 1.2em;
+            text-align: center; padding: 40px;
+            color: var(--primary); font-size: 1em;
+            font-weight: 600;
+        }
+        .loading-dot { display: inline-block; animation: pulse 1.4s ease infinite; }
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.1); }
         }
 
+        /* ── RESPONSIVE ── */
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-
-            .branch-selection-content {
-                padding: 40px 25px;
-            }
-
-            .branch-selection-content h2 {
-                font-size: 1.5em;
-            }
-
-            .branch-selection-content p {
-                font-size: 1em;
-                margin-bottom: 30px;
-            }
-
-            .branch-select-btn {
-                padding: 18px 25px;
-                font-size: 1.1em;
-            }
-
-            .header h1 {
-                font-size: 1.5em;
-            }
-
-            .header p {
-                font-size: 0.9em;
-            }
-
-            .header {
-                padding: 20px 15px;
-            }
-
-            .filter-section {
-                padding: 10px 15px;
-            }
-
-            .filter-group {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .filter-group select {
-                min-width: auto;
-                width: 100%;
-            }
-
-            .calendar-nav {
-                padding: 15px;
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .calendar-nav button {
-                width: 100%;
-                padding: 12px;
-            }
-
-            .month-year {
-                font-size: 1.2em;
-                order: -1;
-                margin-bottom: 10px;
-            }
-
-            .calendar {
-                padding: 15px;
-            }
-
-            .days-header, .days-grid {
-                min-width: 600px;
-            }
-
-            .day-name {
-                padding: 8px 4px;
-                font-size: 0.85em;
-            }
-            
-            .day-cell {
-                min-height: 80px;
-                padding: 6px;
-            }
-
-            .day-cell:hover {
-                transform: none;
-            }
-            
-            .day-number {
-                font-size: 0.95em;
-                margin-bottom: 4px;
-            }
-
-            .shift-item {
-                font-size: 0.75em;
-                padding: 4px 6px;
-            }
-
-            .summary-section {
-                padding: 20px 15px;
-            }
-
-            .summary-title {
-                font-size: 1.1em;
-            }
-
-            .summary-table {
-                font-size: 0.9em;
-            }
-
-            .summary-table th,
-            .summary-table td {
-                padding: 10px 8px;
-            }
-
-            .legend {
-                padding: 15px;
-            }
-
-            .legend-title {
-                font-size: 1em;
-                text-align: center;
-            }
-
-            .legend-items {
-                gap: 10px;
-                font-size: 0.85em;
-            }
-
-            .legend-color {
-                width: 16px;
-                height: 16px;
-            }
-
-            .modal-content {
-                width: 95%;
-                padding: 20px;
-                margin: 10px;
-            }
-
-            .modal-content h2 {
-                font-size: 1.2em;
-                margin-bottom: 15px;
-            }
-
-            .modal-content textarea {
-                padding: 10px;
-                font-size: 14px;
-            }
-
-            .modal-help {
-                font-size: 0.75em;
-                padding: 10px;
-            }
-
-            .modal-buttons {
-                flex-direction: column-reverse;
-            }
-
-            .modal-buttons button {
-                width: 100%;
-                padding: 12px;
-            }
-
-            .loading {
-                font-size: 1em;
-                padding: 30px 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.3em;
-            }
-
-            .days-header, .days-grid {
-                min-width: 500px;
-            }
-
-            .day-cell {
-                min-height: 70px;
-                padding: 4px;
-            }
-
-            .day-number {
-                font-size: 0.85em;
-            }
-
-            .shift-item {
-                font-size: 0.7em;
-                padding: 3px 5px;
-            }
-
-            .summary-table {
-                font-size: 0.8em;
-            }
+            body { padding: 0; }
+            .header { border-radius: 0; padding: 18px 16px; }
+            .calendar-wrap { padding: 12px; }
+            .day-cell { min-height: 80px; padding: 6px; }
+            .shift-item, .task-item { font-size: 0.72em; }
+            .holiday-section { padding: 16px; }
+            .holiday-grid { grid-template-columns: 1fr; }
+            .modal-box { max-width: 100%; margin: 10px; }
+            .modal-footer { flex-direction: column-reverse; }
+            .modal-footer .btn { width: 100%; text-align: center; }
+            .legend { border-radius: 0; flex-direction: column; align-items: flex-start; }
+            .cal-nav { flex-direction: column; gap: 8px; }
+            .nav-btn { width: 100%; }
+            .month-year { text-align: center; }
         }
     </style>
 </head>
 <body>
-    <!-- Branch Selection Screen -->
-    <div class="branch-selection-screen" id="branchSelectionScreen">
-        <div class="branch-selection-content">
-            <h2>Jadwal Kerja</h2>
-            <p>Silahkan pilih cabang mana</p>
-            <div class="branch-buttons">
-                <button class="branch-select-btn" onclick="selectBranch('bdg016')">
-                    🏢 BDG016
-                </button>
-                <button class="branch-select-btn" onclick="selectBranch('bdg026')">
-                    🏢 BDG026
-                </button>
-            </div>
+
+<!-- Branch Selection -->
+<div class="branch-screen" id="branchScreen">
+    <div class="branch-card">
+        <div class="logo">📅</div>
+        <h2>Jadwal PGI</h2>
+        <p>Pilih cabang untuk melanjutkan</p>
+        <div class="branch-buttons">
+            <button class="branch-btn" onclick="selectBranch('bdg016')">🏢 BDG016</button>
+            <button class="branch-btn" onclick="selectBranch('bdg026')">🏢 BDG026</button>
         </div>
     </div>
+</div>
 
-    <!-- Main Container (Hidden Initially) -->
-    <div class="container" id="mainContainer" style="display: none;">
-        <div class="header">
-            <h1>📅 Jadwal PGI - <span id="branchTitle">BDG016</span></h1>
+<!-- Main -->
+<div class="container" id="mainContainer" style="display:none;">
+
+    <div class="header">
+        <div class="header-icon">📅</div>
+        <div class="header-text">
+            <h1>Jadwal PGI — <span id="branchTitle">BDG016</span></h1>
             <p>Klik tanggal untuk menambah atau mengedit jadwal</p>
-            <button onclick="backToBranchSelection()" style="margin-top: 15px; padding: 8px 20px; background: rgba(255,255,255,0.2); color: white; border: 2px solid white; border-radius: 6px; cursor: pointer; font-size: 0.9em; transition: all 0.3s;">
-                ← Ganti Cabang
-            </button>
         </div>
+        <div class="header-actions">
+            <button class="btn-ghost" onclick="backToBranch()">← Ganti Cabang</button>
+        </div>
+    </div>
 
-        <div class="filter-section">
-            <div class="filter-group">
-                <label for="nameFilter">🔍 Filter Nama:</label>
-                <select id="nameFilter" onchange="filterByName()">
-                    <option value="">Semua Orang</option>
+    <!-- Calendar Mode Toggle -->
+    <div class="calendar-toggle">
+        <span class="toggle-label">Mode:</span>
+        <div class="toggle-pills">
+            <button class="toggle-pill active" id="pillShift" onclick="setMode('shift')">👥 Kalender Shift</button>
+            <button class="toggle-pill" id="pillTask" onclick="setMode('task')">📋 Kalender Tugas</button>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar" id="shiftToolbar">
+        <span class="filter-label">🔍 Filter:</span>
+        <select id="nameFilter" onchange="filterByName()">
+            <option value="">Semua Orang</option>
+        </select>
+    </div>
+    <div class="toolbar" id="taskToolbar" style="display:none;">
+        <span class="filter-label">📋 Mode Tugas</span>
+        <span style="font-size:0.85em;color:var(--text-muted);">Klik tanggal untuk tambah tugas. Tugas berulang muncul otomatis.</span>
+    </div>
+
+    <!-- Nav -->
+    <div class="cal-nav">
+        <button class="nav-btn" onclick="changeMonth(-1)">← Sebelumnya</button>
+        <div class="month-year" id="monthYear"></div>
+        <button class="nav-btn" onclick="changeMonth(1)">Berikutnya →</button>
+    </div>
+
+    <!-- Calendar -->
+    <div class="calendar-wrap">
+        <div id="loading" class="loading">
+            Memuat data <span class="loading-dot">●</span><span class="loading-dot">●</span><span class="loading-dot">●</span>
+        </div>
+        <div id="calendarContent" style="display:none;">
+            <div class="days-header">
+                <div class="day-name">Sen</div>
+                <div class="day-name">Sel</div>
+                <div class="day-name">Rab</div>
+                <div class="day-name">Kam</div>
+                <div class="day-name">Jum</div>
+                <div class="day-name weekend">Sab</div>
+                <div class="day-name weekend">Min</div>
+            </div>
+            <div class="days-grid" id="daysGrid"></div>
+        </div>
+    </div>
+
+    <!-- Holiday Section -->
+    <div class="holiday-section" id="holidaySection">
+        <div class="section-title">🗓️ Libur Nasional Bulan Ini</div>
+        <div class="holiday-grid" id="holidayGrid"></div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend" id="legendSection">
+        <span class="legend-label">Keterangan:</span>
+        <div id="shiftLegend" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+            <div class="legend-item"><div class="legend-dot ld-libur"></div> Libur (L)</div>
+            <div class="legend-item"><div class="legend-dot ld-pulsor"></div> Pulsor (P)</div>
+            <div class="legend-item"><div class="legend-dot ld-siang"></div> Siang (S)</div>
+            <div class="legend-item"><div class="legend-dot ld-normal"></div> Normal</div>
+        </div>
+        <div id="taskLegend" style="display:none;gap:12px;flex-wrap:wrap;align-items:center;">
+            <div class="legend-item"><div class="legend-dot ld-oneoff"></div> Tugas Sekali</div>
+            <div class="legend-item"><div class="legend-dot ld-recurring"></div> Tugas Berulang</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── SHIFT MODAL ── -->
+<div class="modal" id="shiftModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2 id="shiftModalTitle">Edit Jadwal Shift</h2>
+            <button class="modal-close" onclick="closeShiftModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="help-box">
+                <strong>Format:</strong> Nama (Kode)<br>
+                <strong>(L)</strong> Libur &nbsp;|&nbsp; <strong>(P)</strong> Pulsor &nbsp;|&nbsp; <strong>(S)</strong> Siang &nbsp;|&nbsp; <em>tanpa kode</em> = Normal<br>
+                Pisahkan dengan enter untuk banyak orang.
+            </div>
+            <div class="form-group">
+                <label class="form-label">Data Shift</label>
+                <textarea class="form-textarea" id="shiftInput" placeholder="Andi (L)&#10;Budi (P)&#10;Citra (S)&#10;Deni"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeShiftModal()">Batal</button>
+            <button class="btn btn-danger" onclick="deleteShift()">🗑 Hapus</button>
+            <button class="btn btn-primary" onclick="saveShift()">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── TASK MODAL ── -->
+<div class="modal" id="taskModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h2 id="taskModalTitle">Kelola Tugas</h2>
+            <button class="modal-close" onclick="closeTaskModal()">✕</button>
+        </div>
+        <div class="modal-body">
+
+            <!-- Existing tasks on this date -->
+            <div id="existingTasksWrap">
+                <label class="form-label">Tugas pada tanggal ini:</label>
+                <div id="existingTasksList"></div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--border);margin:14px 0;">
+
+            <!-- Add new task -->
+            <div class="form-group">
+                <label class="form-label">Tambah Tugas Baru</label>
+                <input class="form-input" id="taskName" placeholder="Nama tugas..." style="margin-bottom:10px;">
+
+                <label class="form-label">Jenis Pengulangan</label>
+                <select class="form-select" id="taskType" onchange="toggleRecurOptions()">
+                    <option value="oneoff">Sekali (tanggal ini saja)</option>
+                    <option value="weekly">Mingguan (hari tertentu)</option>
+                    <option value="monthly">Bulanan (tanggal tertentu)</option>
                 </select>
+
+                <div class="recur-options" id="weeklyOptions">
+                    <div class="recur-row">
+                        <label>Hari:</label>
+                        <div class="checkboxes">
+                            <label class="day-check"><input type="checkbox" value="1"> Sen</label>
+                            <label class="day-check"><input type="checkbox" value="2"> Sel</label>
+                            <label class="day-check"><input type="checkbox" value="3"> Rab</label>
+                            <label class="day-check"><input type="checkbox" value="4"> Kam</label>
+                            <label class="day-check"><input type="checkbox" value="5"> Jum</label>
+                            <label class="day-check"><input type="checkbox" value="6"> Sab</label>
+                            <label class="day-check"><input type="checkbox" value="0"> Min</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recur-options" id="monthlyOptions">
+                    <div class="recur-row">
+                        <label>Tanggal:</label>
+                        <div class="date-inputs" id="monthlyDates">
+                            <input class="date-num-input" type="number" min="1" max="31" placeholder="tgl" id="mDate1">
+                            <input class="date-num-input" type="number" min="1" max="31" placeholder="tgl" id="mDate2">
+                            <input class="date-num-input" type="number" min="1" max="31" placeholder="tgl" id="mDate3">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="calendar-nav">
-            <button onclick="changeMonth(-1)">← Bulan Sebelumnya</button>
-            <div class="month-year" id="monthYear"></div>
-            <button onclick="changeMonth(1)">Bulan Berikutnya →</button>
-        </div>
-
-        <div class="calendar">
-            <div id="loading" class="loading">Memuat data...</div>
-            <div id="calendarContent" style="display: none;">
-                <div class="days-header">
-                    <div class="day-name">Sen</div>
-                    <div class="day-name">Sel</div>
-                    <div class="day-name">Rab</div>
-                    <div class="day-name">Kam</div>
-                    <div class="day-name">Jum</div>
-                    <div class="day-name">Sab</div>
-                    <div class="day-name">Min</div>
-                </div>
-                <div class="days-grid" id="daysGrid"></div>
-            </div>
-        </div>
-
-        <div class="summary-section">
-            <div class="summary-title">📊 Rekap Shift (Bulan Ini)</div>
-            <div style="overflow-x: auto;">
-                <table class="summary-table" id="summaryTable">
-                    <thead>
-                        <tr>
-                            <th>Nama</th>
-                            <th>Libur (L)</th>
-                            <th>Pulsor (P)</th>
-                            <th>Siang (S)</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="summaryBody">
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: #6c757d;">Memuat data...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="legend">
-            <div class="legend-title">Keterangan Shift:</div>
-            <div class="legend-items">
-                <div class="legend-item">
-                    <div class="legend-color libur"></div>
-                    <span><strong>(L)</strong> Libur</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color pulsor"></div>
-                    <span><strong>(P)</strong> Pulsor</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color siang"></div>
-                    <span><strong>(S)</strong> Siang</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color normal"></div>
-                    <span>Normal</span>
-                </div>
-            </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeTaskModal()">Tutup</button>
+            <button class="btn btn-primary task" onclick="addTask()">+ Tambah Tugas</button>
         </div>
     </div>
+</div>
 
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <h2 id="modalTitle">Edit Jadwal Shift</h2>
-            <div class="modal-help">
-                Format: <strong>Nama (Kode)</strong><br>
-                Contoh:<br>
-                • Andi (L) - Libur<br>
-                • Budi (P) - Pulsor<br>
-                • Citra (S) - Siang<br>
-                • Deni - Normal (tanpa kode)<br>
-                <em>Pisahkan dengan enter untuk multiple orang</em>
-            </div>
-            <textarea id="shiftInput" placeholder="Contoh:&#10;Andi (L)&#10;Budi (P)&#10;Citra (S)"></textarea>
-            <div class="modal-buttons">
-                <button class="btn-cancel" onclick="closeModal()">Batal</button>
-                <button class="btn-delete" onclick="deleteShift()">🗑 Hapus Jadwal</button>
-                <button class="btn-save" onclick="saveShift()">Simpan</button>
-            </div>
-        </div>
-    </div>
+<script>
+// ─────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────
+const today = new Date();
+let currentMonth = today.getMonth();
+let currentYear  = today.getFullYear();
+let shiftData    = {};
+let taskData     = { oneoff: {}, weekly: [], monthly: [] };
+let currentBranch = 'bdg016';
+let calendarMode  = 'shift';
+let selectedDay   = null;
+let selectedFilter = '';
 
-    <script>
-        const today = new Date();
-        let currentMonth = today.getMonth();
-        let currentYear = today.getFullYear();
-        let shiftData = {};
-        let selectedDate = null;
-        let selectedFilter = '';
-        let currentBranch = 'bdg016';
+const SCRIPT_URLS = {
+    bdg016: 'https://script.google.com/macros/s/AKfycbzGXFycufPgLbXSNzxdxQBmE9VAXYxeGrKr6H81fIOOgUflIc2f9nOhQ6HohfPZYqw0Vw/exec',
+    bdg026: 'https://script.google.com/macros/s/YOUR_BDG026_SCRIPT_URL/exec'
+};
 
-        // URL untuk masing-masing cabang
-        const SCRIPT_URLS = {
-            'bdg016': 'https://script.google.com/macros/s/AKfycbzGXFycufPgLbXSNzxdxQBmE9VAXYxeGrKr6H81fIOOgUflIc2f9nOhQ6HohfPZYqw0Vw/exec',
-            'bdg026': 'https://script.google.com/macros/s/AKfycbwZwB9wS0XkopObAh0uTzSK41ZIi4vRQRBCl_HlvQiP12ln96vxcKFd_qC_lGcXwzzE/exec' // Ganti dengan URL script BDG026
-        };
+const TASK_STORAGE_PREFIX = 'pgi_tasks_';
 
-        const monthNames = [
-            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-        ];
+const monthNames = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const dayNames   = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
 
-        // Daftar libur nasional 2025-2026 (format: 'YYYY-MM-DD')
-        const nationalHolidays = {
-            // 2025
-            '2025-01-01': 'Tahun Baru 2025',
-            '2025-01-16': 'Isra Mikraj Nabi Muhammad SAW',
-            '2025-01-29': 'Tahun Baru Imlek 2576',
-            '2025-03-29': 'Hari Suci Nyepi (Tahun Baru Saka 1947)',
-            '2025-03-31': 'Wafat Isa Al Masih',
-            '2025-04-01': 'Cuti Bersama Wafat Isa Al Masih',
-            '2025-04-02': 'Cuti Bersama Idul Fitri',
-            '2025-04-03': 'Idul Fitri 1446 H',
-            '2025-04-04': 'Idul Fitri 1446 H',
-            '2025-04-07': 'Cuti Bersama Idul Fitri',
-            '2025-05-01': 'Hari Buruh Internasional',
-            '2025-05-12': 'Kenaikan Isa Al Masih',
-            '2025-05-29': 'Hari Raya Waisak 2569',
-            '2025-06-01': 'Hari Lahir Pancasila',
-            '2025-06-06': 'Idul Adha 1446 H',
-            '2025-06-27': 'Tahun Baru Islam 1447 H',
-            '2025-08-17': 'Hari Kemerdekaan RI',
-            '2025-09-05': 'Maulid Nabi Muhammad SAW',
-            '2025-12-25': 'Hari Raya Natal',
-            '2025-12-26': 'Cuti Bersama Hari Raya Natal',
-            
-            // 2026
-            '2026-01-01': 'Tahun Baru 2026',
-            '2026-01-06': 'Isra Mikraj Nabi Muhammad SAW',
-            '2026-02-17': 'Tahun Baru Imlek 2577',
-            '2026-03-19': 'Hari Suci Nyepi (Tahun Baru Saka 1948)',
-            '2026-03-24': 'Idul Fitri 1447 H',
-            '2026-03-25': 'Idul Fitri 1447 H',
-            '2026-04-03': 'Wafat Isa Al Masih',
-            '2026-05-01': 'Hari Buruh Internasional',
-            '2026-05-14': 'Kenaikan Isa Al Masih',
-            '2026-05-18': 'Hari Raya Waisak 2570',
-            '2026-05-27': 'Idul Adha 1447 H',
-            '2026-06-01': 'Hari Lahir Pancasila',
-            '2026-06-17': 'Tahun Baru Islam 1448 H',
-            '2026-08-17': 'Hari Kemerdekaan RI',
-            '2026-08-26': 'Maulid Nabi Muhammad SAW',
-            '2026-12-25': 'Hari Raya Natal'
-        };
+// ─────────────────────────────────────────
+//  NATIONAL HOLIDAYS
+// ─────────────────────────────────────────
+const nationalHolidays = {
+    '2025-01-01':'Tahun Baru 2025',
+    '2025-01-16':'Isra Mikraj Nabi Muhammad SAW',
+    '2025-01-29':'Tahun Baru Imlek 2576',
+    '2025-03-29':'Hari Suci Nyepi (Tahun Baru Saka 1947)',
+    '2025-03-31':'Wafat Isa Al Masih',
+    '2025-04-01':'Cuti Bersama Wafat Isa Al Masih',
+    '2025-04-02':'Cuti Bersama Idul Fitri',
+    '2025-04-03':'Idul Fitri 1446 H',
+    '2025-04-04':'Idul Fitri 1446 H',
+    '2025-04-07':'Cuti Bersama Idul Fitri',
+    '2025-05-01':'Hari Buruh Internasional',
+    '2025-05-12':'Kenaikan Isa Al Masih',
+    '2025-05-29':'Hari Raya Waisak 2569',
+    '2025-06-01':'Hari Lahir Pancasila',
+    '2025-06-06':'Idul Adha 1446 H',
+    '2025-06-27':'Tahun Baru Islam 1447 H',
+    '2025-08-17':'Hari Kemerdekaan RI',
+    '2025-09-05':'Maulid Nabi Muhammad SAW',
+    '2025-12-25':'Hari Raya Natal',
+    '2025-12-26':'Cuti Bersama Hari Raya Natal',
+    '2026-01-01':'Tahun Baru 2026',
+    '2026-01-06':'Isra Mikraj Nabi Muhammad SAW',
+    '2026-02-17':'Tahun Baru Imlek 2577',
+    '2026-03-19':'Hari Suci Nyepi (Tahun Baru Saka 1948)',
+    '2026-03-24':'Idul Fitri 1447 H',
+    '2026-03-25':'Idul Fitri 1447 H',
+    '2026-04-03':'Wafat Isa Al Masih',
+    '2026-05-01':'Hari Buruh Internasional',
+    '2026-05-14':'Kenaikan Isa Al Masih',
+    '2026-05-18':'Hari Raya Waisak 2570',
+    '2026-05-27':'Idul Adha 1447 H',
+    '2026-06-01':'Hari Lahir Pancasila',
+    '2026-06-17':'Tahun Baru Islam 1448 H',
+    '2026-08-17':'Hari Kemerdekaan RI',
+    '2026-08-26':'Maulid Nabi Muhammad SAW',
+    '2026-12-25':'Hari Raya Natal'
+};
 
-        function isRedDate(year, month, day) {
-            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const date = new Date(year, month, day);
-            const dayOfWeek = date.getDay();
-            
-            // Minggu atau libur nasional
-            return dayOfWeek === 0 || nationalHolidays[dateKey];
+function isRedDate(y, m, d) {
+    const dk = dateKey(y, m+1, d);
+    return new Date(y, m, d).getDay() === 0 || !!nationalHolidays[dk];
+}
+function getHolidayName(y, m, d) {
+    return nationalHolidays[dateKey(y, m+1, d)] || null;
+}
+function dateKey(y, m, d) {
+    return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+
+// ─────────────────────────────────────────
+//  BRANCH / MODE SELECTION
+// ─────────────────────────────────────────
+function selectBranch(branch) {
+    currentBranch = branch;
+    document.getElementById('branchTitle').textContent = branch.toUpperCase();
+    document.getElementById('branchScreen').classList.add('hidden');
+    document.getElementById('mainContainer').style.display = 'block';
+    selectedFilter = '';
+    loadData();
+    loadTasks();
+}
+
+function backToBranch() {
+    document.getElementById('branchScreen').classList.remove('hidden');
+    document.getElementById('mainContainer').style.display = 'none';
+    shiftData = {};
+}
+
+function setMode(mode) {
+    calendarMode = mode;
+    document.getElementById('pillShift').className = 'toggle-pill' + (mode === 'shift' ? ' active' : '');
+    document.getElementById('pillTask').className  = 'toggle-pill' + (mode === 'task'  ? ' task-active' : '');
+    document.getElementById('shiftToolbar').style.display = mode === 'shift' ? 'flex' : 'none';
+    document.getElementById('taskToolbar').style.display  = mode === 'task'  ? 'flex' : 'none';
+    document.getElementById('shiftLegend').style.display  = mode === 'shift' ? 'flex' : 'none';
+    document.getElementById('taskLegend').style.display   = mode === 'task'  ? 'flex' : 'none';
+    renderCalendar();
+}
+
+// ─────────────────────────────────────────
+//  SHIFT DATA (Google Sheets)
+// ─────────────────────────────────────────
+async function loadData() {
+    try {
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('calendarContent').style.display = 'none';
+        const res  = await fetch(SCRIPT_URLS[currentBranch]);
+        const data = await res.json();
+        shiftData  = {};
+        data.forEach(row => {
+            if (!row.date) return;
+            let dk = row.date;
+            if (dk.includes('T')) {
+                const d = new Date(dk);
+                dk = dateKey(d.getFullYear(), d.getMonth()+1, d.getDate());
+            }
+            shiftData[dk] = row.names || '';
+        });
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('calendarContent').style.display = 'block';
+        updateNameFilter();
+        renderCalendar();
+        renderHolidays();
+    } catch(e) {
+        console.error(e);
+        document.getElementById('loading').innerHTML = 'Gagal memuat data. <button onclick="loadData()" style="margin-left:8px;padding:6px 14px;background:var(--primary);color:white;border:none;border-radius:6px;cursor:pointer;">Coba Lagi</button>';
+    }
+}
+
+function updateNameFilter() {
+    const names = new Set();
+    Object.values(shiftData).forEach(s => {
+        if (s) s.split('\n').forEach(line => {
+            const n = line.replace(/\s*\([LPS]\)/g,'').trim();
+            if (n) names.add(n);
+        });
+    });
+    const sel = document.getElementById('nameFilter');
+    sel.innerHTML = '<option value="">Semua Orang</option>';
+    [...names].sort().forEach(n => {
+        const o = document.createElement('option');
+        o.value = o.textContent = n;
+        sel.appendChild(o);
+    });
+}
+
+function filterByName() {
+    selectedFilter = document.getElementById('nameFilter').value;
+    renderCalendar();
+}
+
+function getShiftClass(text) {
+    if (text.includes('(L)')) return 'libur';
+    if (text.includes('(P)')) return 'pulsor';
+    if (text.includes('(S)')) return 'siang';
+    return 'normal';
+}
+
+// ─────────────────────────────────────────
+//  TASK DATA (localStorage)
+// ─────────────────────────────────────────
+function taskStorageKey() {
+    return TASK_STORAGE_PREFIX + currentBranch;
+}
+
+function loadTasks() {
+    try {
+        const raw = localStorage.getItem(taskStorageKey());
+        if (raw) taskData = JSON.parse(raw);
+        else taskData = { oneoff: {}, weekly: [], monthly: [] };
+    } catch(e) {
+        taskData = { oneoff: {}, weekly: [], monthly: [] };
+    }
+}
+
+function saveTasks() {
+    localStorage.setItem(taskStorageKey(), JSON.stringify(taskData));
+}
+
+// Get tasks visible on a specific date
+function getTasksForDate(y, m, d) {
+    const dk = dateKey(y, m+1, d);
+    const dow = new Date(y, m, d).getDay(); // 0=Sun...6=Sat
+    const results = [];
+
+    // One-off
+    (taskData.oneoff[dk] || []).forEach(t => {
+        results.push({ ...t, kind: 'oneoff', dk });
+    });
+
+    // Weekly
+    taskData.weekly.forEach(t => {
+        if (t.days.includes(dow)) results.push({ ...t, kind: 'recurring' });
+    });
+
+    // Monthly
+    taskData.monthly.forEach(t => {
+        if (t.dates.includes(d)) results.push({ ...t, kind: 'recurring' });
+    });
+
+    return results;
+}
+
+// ─────────────────────────────────────────
+//  RENDER CALENDAR
+// ─────────────────────────────────────────
+function renderCalendar() {
+    document.getElementById('monthYear').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+    const grid = document.getElementById('daysGrid');
+    grid.innerHTML = '';
+
+    const jsDay   = new Date(currentYear, currentMonth, 1).getDay();
+    const firstDay = jsDay === 0 ? 6 : jsDay - 1;
+    const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+
+    for (let i = 0; i < firstDay; i++) {
+        const e = document.createElement('div');
+        e.className = 'day-cell empty';
+        grid.appendChild(e);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dk  = dateKey(currentYear, currentMonth+1, day);
+        const red = isRedDate(currentYear, currentMonth, day);
+        const hname = getHolidayName(currentYear, currentMonth, day);
+        const isToday = (day === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear());
+
+        const cell = document.createElement('div');
+        cell.className = 'day-cell' + (red ? ' red-day' : '') + (isToday ? ' today' : '');
+
+        // Day number
+        const numDiv = document.createElement('div');
+        numDiv.className = 'day-number' + (red ? ' red' : '') + (isToday ? ' today-num' : '');
+        numDiv.textContent = day;
+        cell.appendChild(numDiv);
+
+        // Holiday label
+        if (hname) {
+            const hl = document.createElement('span');
+            hl.className = 'holiday-label';
+            hl.textContent = hname;
+            cell.appendChild(hl);
         }
 
-        function getHolidayName(year, month, day) {
-            const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            return nationalHolidays[dateKey] || null;
-        }
-
-        function selectBranch(branch) {
-            currentBranch = branch;
-            
-            // Update branch title
-            document.getElementById('branchTitle').textContent = branch.toUpperCase();
-            
-            // Hide selection screen and show main container
-            document.getElementById('branchSelectionScreen').classList.add('hidden');
-            document.getElementById('mainContainer').style.display = 'block';
-            
-            // Reset filter
-            selectedFilter = '';
-            document.getElementById('nameFilter').value = '';
-            
-            // Load data for selected branch
-            loadData();
-        }
-
-        function backToBranchSelection() {
-            // Show selection screen and hide main container
-            document.getElementById('branchSelectionScreen').classList.remove('hidden');
-            document.getElementById('mainContainer').style.display = 'none';
-            
-            // Reset data
-            shiftData = {};
-        }
-
-        function switchBranch(branch) {
-            currentBranch = branch;
-            
-            // Update button states
-            document.querySelectorAll('.branch-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Reset filter
-            selectedFilter = '';
-            document.getElementById('nameFilter').value = '';
-            
-            // Reload data for selected branch
-            loadData();
-        }
-
-        async function loadData() {
-            try {
-                document.getElementById('loading').style.display = 'block';
-                document.getElementById('calendarContent').style.display = 'none';
-                
-                const response = await fetch(SCRIPT_URLS[currentBranch]);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                
-                shiftData = {};
-                data.forEach(row => {
-                    if (row.date) {
-                        let dateKey = row.date;
-                        if (dateKey.includes('T')) {
-                            const d = new Date(dateKey);
-                            dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                        }
-                        shiftData[dateKey] = row.names || '';
-                    }
+        if (calendarMode === 'shift') {
+            const list = document.createElement('div');
+            list.className = 'shift-list';
+            if (shiftData[dk]) {
+                shiftData[dk].split('\n').filter(s => s.trim()).forEach(shift => {
+                    const name = shift.replace(/\s*\([LPS]\)/g,'').trim();
+                    if (selectedFilter && name !== selectedFilter) return;
+                    const item = document.createElement('div');
+                    item.className = `shift-item ${getShiftClass(shift)}`;
+                    item.textContent = shift.trim();
+                    list.appendChild(item);
                 });
-                
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('calendarContent').style.display = 'block';
-                updateNameFilter();
-                renderCalendar();
-                updateSummary();
-            } catch (error) {
-                console.error('Error loading data:', error);
-                document.getElementById('loading').innerHTML = 'Gagal memuat data. <button onclick="loadData()" style="margin-left:10px;padding:8px 16px;background:#667eea;color:white;border:none;border-radius:6px;cursor:pointer;">Coba Lagi</button>';
             }
-        }
-
-        function updateNameFilter() {
-            const names = new Set();
-            Object.values(shiftData).forEach(shifts => {
-                if (shifts) {
-                    shifts.split('\n').forEach(shift => {
-                        const name = shift.replace(/\s*\([LPS]\)\s*/g, '').trim();
-                        if (name) names.add(name);
-                    });
-                }
+            cell.appendChild(list);
+            cell.onclick = () => openShiftModal(day);
+        } else {
+            const list = document.createElement('div');
+            list.className = 'task-list';
+            const tasks = getTasksForDate(currentYear, currentMonth, day);
+            tasks.forEach(t => {
+                const item = document.createElement('div');
+                item.className = `task-item ${t.kind}`;
+                item.innerHTML = `<span class="task-icon">${t.kind === 'recurring' ? '🔁' : '📌'}</span>${t.name}`;
+                list.appendChild(item);
             });
-
-            const select = document.getElementById('nameFilter');
-            select.innerHTML = '<option value="">Semua Orang</option>';
-            Array.from(names).sort().forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                select.appendChild(option);
-            });
+            cell.appendChild(list);
+            cell.onclick = () => openTaskModal(day);
         }
 
-        function filterByName() {
-            selectedFilter = document.getElementById('nameFilter').value;
-            renderCalendar();
-            updateSummary();
+        grid.appendChild(cell);
+    }
+
+    renderHolidays();
+}
+
+// ─────────────────────────────────────────
+//  RENDER HOLIDAYS
+// ─────────────────────────────────────────
+function renderHolidays() {
+    const grid = document.getElementById('holidayGrid');
+    grid.innerHTML = '';
+
+    const daysInMonth = new Date(currentYear, currentMonth+1, 0).getDate();
+    const holidays = [];
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const dk = dateKey(currentYear, currentMonth+1, d);
+        const hn = nationalHolidays[dk];
+        if (hn) {
+            const dayOfWeek = dayNames[new Date(currentYear, currentMonth, d).getDay()];
+            holidays.push({ day: d, dayName: dayOfWeek, name: hn });
         }
+    }
 
-        function getShiftType(text) {
-            if (text.includes('(L)')) return 'libur';
-            if (text.includes('(P)')) return 'pulsor';
-            if (text.includes('(S)')) return 'siang';
-            return 'normal';
-        }
+    if (holidays.length === 0) {
+        grid.innerHTML = '<span class="no-holiday">Tidak ada libur nasional bulan ini.</span>';
+        return;
+    }
 
-        function renderCalendar() {
-            const monthYear = document.getElementById('monthYear');
-            monthYear.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+    holidays.forEach(h => {
+        const chip = document.createElement('div');
+        chip.className = 'holiday-chip';
+        chip.innerHTML = `<span class="hdate">${String(h.day).padStart(2,'0')} ${monthNames[currentMonth].slice(0,3)}<br>${h.dayName}</span><span class="hname">${h.name}</span>`;
+        grid.appendChild(chip);
+    });
+}
 
-            const daysGrid = document.getElementById('daysGrid');
-            daysGrid.innerHTML = '';
+// ─────────────────────────────────────────
+//  SHIFT MODAL
+// ─────────────────────────────────────────
+function openShiftModal(day) {
+    selectedDay = day;
+    const dk = dateKey(currentYear, currentMonth+1, day);
+    document.getElementById('shiftModalTitle').textContent =
+        `Jadwal Shift ${currentBranch.toUpperCase()} — ${day} ${monthNames[currentMonth]} ${currentYear}`;
+    document.getElementById('shiftInput').value = shiftData[dk] || '';
+    document.getElementById('shiftModal').classList.add('active');
+    document.getElementById('shiftInput').focus();
+}
 
-            const jsDay = new Date(currentYear, currentMonth, 1).getDay();
-            const firstDay = (jsDay === 0) ? 6 : jsDay - 1;
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+function closeShiftModal() {
+    document.getElementById('shiftModal').classList.remove('active');
+    selectedDay = null;
+}
 
-            for (let i = 0; i < firstDay; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'day-cell empty';
-                daysGrid.appendChild(emptyCell);
+async function saveShift() {
+    const shifts = document.getElementById('shiftInput').value.trim();
+    const dk = dateKey(currentYear, currentMonth+1, selectedDay);
+    try {
+        await fetch(SCRIPT_URLS[currentBranch], {
+            method: 'POST', mode: 'no-cors',
+            body: JSON.stringify({ date: dk, names: shifts })
+        });
+        if (shifts) shiftData[dk] = shifts;
+        else delete shiftData[dk];
+        updateNameFilter(); renderCalendar(); closeShiftModal();
+    } catch(e) { alert('Gagal menyimpan. Silakan coba lagi.'); }
+}
+
+async function deleteShift() {
+    if (!confirm('Hapus semua jadwal di tanggal ini?')) return;
+    const dk = dateKey(currentYear, currentMonth+1, selectedDay);
+    try {
+        await fetch(SCRIPT_URLS[currentBranch], {
+            method: 'POST', mode: 'no-cors',
+            body: JSON.stringify({ date: dk, names: '' })
+        });
+        delete shiftData[dk];
+        updateNameFilter(); renderCalendar(); closeShiftModal();
+    } catch(e) { alert('Gagal menghapus. Silakan coba lagi.'); }
+}
+
+// ─────────────────────────────────────────
+//  TASK MODAL
+// ─────────────────────────────────────────
+function openTaskModal(day) {
+    selectedDay = day;
+    document.getElementById('taskModalTitle').textContent =
+        `Tugas — ${day} ${monthNames[currentMonth]} ${currentYear}`;
+    document.getElementById('taskName').value = '';
+    document.getElementById('taskType').value = 'oneoff';
+
+    // Reset recurring options
+    document.getElementById('weeklyOptions').classList.remove('visible');
+    document.getElementById('monthlyOptions').classList.remove('visible');
+    document.querySelectorAll('#weeklyOptions input[type=checkbox]').forEach(cb => cb.checked = false);
+    document.getElementById('mDate1').value = '';
+    document.getElementById('mDate2').value = '';
+    document.getElementById('mDate3').value = '';
+
+    renderExistingTasks(day);
+    document.getElementById('taskModal').classList.add('active');
+    document.getElementById('taskName').focus();
+}
+
+function closeTaskModal() {
+    document.getElementById('taskModal').classList.remove('active');
+    selectedDay = null;
+}
+
+function toggleRecurOptions() {
+    const v = document.getElementById('taskType').value;
+    document.getElementById('weeklyOptions').classList.toggle('visible', v === 'weekly');
+    document.getElementById('monthlyOptions').classList.toggle('visible', v === 'monthly');
+}
+
+function renderExistingTasks(day) {
+    const wrap = document.getElementById('existingTasksList');
+    wrap.innerHTML = '';
+    const dk = dateKey(currentYear, currentMonth+1, day);
+    const dow = new Date(currentYear, currentMonth, day).getDay();
+
+    // One-off on this date
+    (taskData.oneoff[dk] || []).forEach((t, idx) => {
+        wrap.appendChild(buildTaskRow(t.name, 'oneoff', () => {
+            taskData.oneoff[dk].splice(idx, 1);
+            if (taskData.oneoff[dk].length === 0) delete taskData.oneoff[dk];
+            saveTasks(); renderExistingTasks(day); renderCalendar();
+        }));
+    });
+
+    // Weekly matching this day
+    taskData.weekly.forEach((t, idx) => {
+        if (!t.days.includes(dow)) return;
+        wrap.appendChild(buildTaskRow(t.name, 'recurring', () => {
+            if (confirm(`Hapus tugas berulang "${t.name}" dari semua hari?`)) {
+                taskData.weekly.splice(idx, 1);
+                saveTasks(); renderExistingTasks(day); renderCalendar();
             }
+        }));
+    });
 
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dayCell = document.createElement('div');
-                dayCell.className = 'day-cell';
-                
-                const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                
-                // Check if red date
-                const isRed = isRedDate(currentYear, currentMonth, day);
-                const holidayName = getHolidayName(currentYear, currentMonth, day);
-                
-                const shiftListDiv = document.createElement('div');
-                shiftListDiv.className = 'shift-list';
-                
-                if (shiftData[dateKey]) {
-                    const shifts = shiftData[dateKey].split('\n').filter(s => s.trim());
-                    shifts.forEach(shift => {
-                        const name = shift.replace(/\s*\([LPS]\)\s*/g, '').trim();
-                        
-                        if (!selectedFilter || name === selectedFilter) {
-                            const shiftItem = document.createElement('div');
-                            shiftItem.className = `shift-item ${getShiftType(shift)}`;
-                            shiftItem.textContent = shift.trim();
-                            shiftListDiv.appendChild(shiftItem);
-                        }
-                    });
-                }
-                
-                dayCell.innerHTML = `<div class="day-number ${isRed ? 'red-date' : ''}">${day}</div>`;
-                dayCell.appendChild(shiftListDiv);
-                
-                // Tooltip untuk libur nasional
-                if (holidayName) {
-                    dayCell.title = holidayName;
-                }
-                
-                dayCell.onclick = () => openModal(day);
-                daysGrid.appendChild(dayCell);
+    // Monthly matching this date
+    taskData.monthly.forEach((t, idx) => {
+        if (!t.dates.includes(day)) return;
+        wrap.appendChild(buildTaskRow(t.name, 'recurring', () => {
+            if (confirm(`Hapus tugas berulang "${t.name}" dari semua tanggal?`)) {
+                taskData.monthly.splice(idx, 1);
+                saveTasks(); renderExistingTasks(day); renderCalendar();
             }
-        }
+        }));
+    });
 
-        function updateSummary() {
-            const summary = {};
-            const startDate = new Date(currentYear, currentMonth, 1);
-            const endDate = new Date(currentYear, currentMonth + 1, 0);
+    if (wrap.children.length === 0) {
+        wrap.innerHTML = '<div style="font-size:0.85em;color:var(--text-muted);font-style:italic;">Belum ada tugas pada tanggal ini.</div>';
+    }
+}
 
-            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-                const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                
-                if (shiftData[dateKey]) {
-                    shiftData[dateKey].split('\n').forEach(shift => {
-                        const name = shift.replace(/\s*\([LPS]\)\s*/g, '').trim();
-                        if (!name) return;
-                        
-                        if (selectedFilter && name !== selectedFilter) return;
+function buildTaskRow(name, kind, onDelete) {
+    const div = document.createElement('div');
+    div.className = 'task-existing-item';
+    div.innerHTML = `<span>${name}<span class="task-badge ${kind}">${kind === 'recurring' ? '🔁 Berulang' : '📌 Sekali'}</span></span>`;
+    const btn = document.createElement('button');
+    btn.className = 'task-del-btn'; btn.textContent = '✕';
+    btn.onclick = onDelete;
+    div.appendChild(btn);
+    return div;
+}
 
-                        if (!summary[name]) {
-                            summary[name] = { libur: 0, pulsor: 0, siang: 0, total: 0 };
-                        }
+function addTask() {
+    const name = document.getElementById('taskName').value.trim();
+    if (!name) { document.getElementById('taskName').focus(); return; }
+    const type = document.getElementById('taskType').value;
+    const dk   = dateKey(currentYear, currentMonth+1, selectedDay);
 
-                        if (shift.includes('(L)')) summary[name].libur++;
-                        else if (shift.includes('(P)')) summary[name].pulsor++;
-                        else if (shift.includes('(S)')) summary[name].siang++;
-                        
-                        summary[name].total++;
-                    });
-                }
-            }
+    if (type === 'oneoff') {
+        if (!taskData.oneoff[dk]) taskData.oneoff[dk] = [];
+        taskData.oneoff[dk].push({ name });
 
-            const tbody = document.getElementById('summaryBody');
-            tbody.innerHTML = '';
+    } else if (type === 'weekly') {
+        const days = [...document.querySelectorAll('#weeklyOptions input[type=checkbox]:checked')].map(cb => parseInt(cb.value));
+        if (days.length === 0) { alert('Pilih minimal satu hari.'); return; }
+        taskData.weekly.push({ name, days });
 
-            const sortedNames = Object.keys(summary).sort();
-            
-            if (sortedNames.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #6c757d;">Tidak ada data</td></tr>';
-                return;
-            }
+    } else if (type === 'monthly') {
+        const dates = [
+            document.getElementById('mDate1').value,
+            document.getElementById('mDate2').value,
+            document.getElementById('mDate3').value
+        ].map(v => parseInt(v)).filter(v => !isNaN(v) && v >= 1 && v <= 31);
+        if (dates.length === 0) { alert('Masukkan minimal satu tanggal.'); return; }
+        taskData.monthly.push({ name, dates });
+    }
 
-            sortedNames.forEach(name => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><strong>${name}</strong></td>
-                    <td><span class="badge libur">${summary[name].libur}</span></td>
-                    <td><span class="badge pulsor">${summary[name].pulsor}</span></td>
-                    <td><span class="badge siang">${summary[name].siang}</span></td>
-                    <td><strong>${summary[name].total}</strong></td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+    saveTasks();
+    document.getElementById('taskName').value = '';
+    renderExistingTasks(selectedDay);
+    renderCalendar();
+}
 
-        function openModal(day) {
-            selectedDate = day;
-            const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            
-            document.getElementById('modalTitle').textContent = `Jadwal Shift ${currentBranch.toUpperCase()} - ${day} ${monthNames[currentMonth]} ${currentYear}`;
-            document.getElementById('shiftInput').value = shiftData[dateKey] || '';
-            document.getElementById('modal').classList.add('active');
-            document.getElementById('shiftInput').focus();
-        }
+// ─────────────────────────────────────────
+//  MONTH NAV
+// ─────────────────────────────────────────
+function changeMonth(dir) {
+    currentMonth += dir;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    else if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    renderCalendar();
+}
 
-        function closeModal() {
-            document.getElementById('modal').classList.remove('active');
-            selectedDate = null;
-        }
-
-        async function saveShift() {
-            const shifts = document.getElementById('shiftInput').value.trim();
-            const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
-            
-            try {
-                await fetch(SCRIPT_URLS[currentBranch], {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({
-                        date: dateKey,
-                        names: shifts
-                    })
-                });
-                
-                if (shifts) {
-                    shiftData[dateKey] = shifts;
-                } else {
-                    delete shiftData[dateKey];
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                updateNameFilter();
-                renderCalendar();
-                updateSummary();
-                closeModal();
-            } catch (error) {
-                console.error('Error saving data:', error);
-                alert('Gagal menyimpan data. Silakan coba lagi.');
-            }
-        }
-
-        async function deleteShift() {
-            if (!confirm('Yakin ingin menghapus semua jadwal di tanggal ini?')) {
-                return;
-            }
-
-            const dateKey = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
-            
-            try {
-                await fetch(SCRIPT_URLS[currentBranch], {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({
-                        date: dateKey,
-                        names: ''
-                    })
-                });
-                
-                delete shiftData[dateKey];
-                
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                updateNameFilter();
-                renderCalendar();
-                updateSummary();
-                closeModal();
-            } catch (error) {
-                console.error('Error deleting data:', error);
-                alert('Gagal menghapus data. Silakan coba lagi.');
-            }
-        }
-
-        function changeMonth(direction) {
-            currentMonth += direction;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar();
-            updateSummary();
-        }
-
-        // Don't auto-load, wait for user to select branch
-    </script>
+// ─────────────────────────────────────────
+//  CLOSE MODAL ON BACKDROP CLICK
+// ─────────────────────────────────────────
+document.getElementById('shiftModal').addEventListener('click', function(e) {
+    if (e.target === this) closeShiftModal();
+});
+document.getElementById('taskModal').addEventListener('click', function(e) {
+    if (e.target === this) closeTaskModal();
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeShiftModal(); closeTaskModal(); }
+});
+</script>
 </body>
 </html>
